@@ -19,12 +19,12 @@
 | 游戏HTML | `flappy-bird.html`、`lianliankan.html`、`xiaoxiaole.html`、`games-index.html` | 与 `games/` 和 `public/` 重复 |
 | Logo图片 | `logo_dlt.png`、`logo_7xc.png`、`logo_pl3.png`、`logo_pl5.png`、`logo_jc.png`、`logo_36x7.png`、`竞彩.png` | 应归入 `src/assets/` 或 `public/` |
 | 设计素材 | `ChatGPT Image *.png`、`image.png`、`体彩大头贴2.png` | 应归入 `docs/design/` 或归档 |
-| 构建产物 | `cjdlt-deploy.tar` | 应在 `.gitignore` 中排除 |
+| 构建产物 | `体彩门店互动平台-deploy.tar` | 应在 `.gitignore` 中排除 |
 | 日志文件 | `server_debug.log`、`server_err.log`、`server_out.log` | 应在 `.gitignore` 中排除 |
 | 脚本 | `deploy-games.ps1`、`deploy.sh`、`start-backend.bat`、`start-frontend.bat`、`restart_services.bat` | 应归入 `scripts/` |
 | 构建脚本 | `_gen_v2.cjs`、`_organize_games.cjs`、`build_llk_v2.cjs`、`new_render.js` | 应归入 `scripts/` 或归档 |
 | 临时文件 | `xiaoxiaole_temp_drawSoundBtn.txt`、`_types_data.txt`、`npm` | 应删除或归档 |
-| 配置 | `CJDLT.code-workspace` | 应归入 `.vscode/` |
+| 配置 | `体彩门店互动平台.code-workspace` | 应归入 `.vscode/` |
 
 ### 1.2 游戏资源重复
 
@@ -79,13 +79,13 @@ public/                         ← 又有一份HTML副本
 ## 三、目标目录结构
 
 ```
-CJDLT/
+体彩门店互动平台/
 ├── .github/                          # CI/CD
 │   └── workflows/
 │       └── fetch-lottery.yml
 │
 ├── .vscode/                          # IDE 配置
-│   └── settings.json                 # (原 CJDLT.code-workspace)
+│   └── settings.json                 # (原 体彩门店互动平台.code-workspace)
 │
 ├── android/                          # Capacitor Android 工程（不动）
 │
@@ -227,7 +227,7 @@ CJDLT/
 - image.png                   → 删除或移入 docs/design/
 - ChatGPT Image *.png         → 删除或移入 docs/design/
 - 体彩大头贴2.png             → 删除或移入 docs/design/
-- cjdlt-deploy.tar            → 删除（构建产物）
+- 体彩门店互动平台-deploy.tar            → 删除（构建产物）
 - server_debug.log            → 删除（日志）
 - server_err.log              → 删除（日志）
 - server_out.log              → 删除（日志）
@@ -263,7 +263,7 @@ CJDLT/
 
 **移动到 `.vscode/`**：
 ```
-- CJDLT.code-workspace → .vscode/settings.json
+- 体彩门店互动平台.code-workspace → .vscode/settings.json
 ```
 
 ### 4.2 整合游戏素材
@@ -308,7 +308,7 @@ CJDLT/
 ```gitignore
 # 构建产物
 dist/
-cjdlt-deploy.tar
+体彩门店互动平台-deploy.tar
 
 # 日志
 *.log

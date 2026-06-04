@@ -1,0 +1,2122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,maximum-scale=1.0">
+<title>体彩消消乐</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&family=Noto+Sans+SC:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+canvas{display:block;margin:0 auto}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+const _fromPage=new URLSearchParams(location.search).get('from')||'/';
+function goHome(){location.href=_fromPage;}
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+const DW = 960, DH = 600;
+let W, H, sc, ox, oy;
+function resize() {
+    W = window.innerWidth; H = window.innerHeight;
+    sc = Math.min(W/DW, H/DH);
+    canvas.width = W; canvas.height = H;
+    ox = (W - DW*sc)/2; oy = (H - DH*sc)/2;
+}
+resize(); window.addEventListener('resize', resize);
+
+
+
+/* ── Audio ── */
+let aC = null;
+function ensA() { if(!aC) aC = new (window.AudioContext||window.webkitAudioContext)(); }
+function toggleSound() {
+    soundOn = !soundOn;
+    if(!soundOn) bgmStop();
+    else if(state==='playing') bgmStart();
+}
+// 基础音符：柔和正弦波，带渐入渐出
+function tone(freq, dur, vol, type, delay) {
+    if(!aC || !soundOn) return;
+    try {
+        const t = aC.currentTime + (delay||0);
+        const o = aC.createOscillator(), g = aC.createGain();
+        o.type = type||'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(vol||.1, t + .01);
+        g.gain.exponentialRampToValueAtTime(.001, t + dur);
+        o.connect(g); g.connect(aC.destination);
+        o.start(t); o.stop(t + dur);
+    } catch(e){}
+}
+// 双音叠加（ richer sound ）
+function chime(f1, f2, dur, vol, dly) {
+    tone(f1, dur, vol, 'sine', dly);
+    tone(f2, dur, vol*.5, 'sine', dly);
+}
+
+// 选中 — 轻柔叮
+const sndSel=()=>chime(1200,1800,.08,.08);
+
+// 交换 — 快速上行滑音
+const sndSwap=()=>{
+    if(!aC) return;
+    try{const o=aC.createOscillator(),g=aC.createGain();o.type='sine';
+    o.frequency.setValueAtTime(300,aC.currentTime);
+    o.frequency.exponentialRampToValueAtTime(600,aC.currentTime+.08);
+    g.gain.setValueAtTime(.08,aC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,aC.currentTime+.1);
+    o.connect(g);g.connect(aC.destination);o.start();o.stop(aC.currentTime+.1);}catch(e){}
+};
+
+// 消除 — 愉快上行双音
+const sndMatch=()=>{chime(660,990,.12,.1,0);chime(880,1320,.15,.1,.06)};
+
+// 连击 — 逐级升高的音阶
+const sndCombo=()=>{[784,988,1175,1397].forEach((f,i)=>chime(f,f*1.5,.1,.1,i*.05))};
+
+// 失败 — 柔和低音下行
+const sndFail=()=>{
+    if(!aC) return;
+    try{const o=aC.createOscillator(),g=aC.createGain();o.type='triangle';
+    o.frequency.setValueAtTime(330,aC.currentTime);
+    o.frequency.exponentialRampToValueAtTime(180,aC.currentTime+.2);
+    g.gain.setValueAtTime(.07,aC.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,aC.currentTime+.25);
+    o.connect(g);g.connect(aC.destination);o.start();o.stop(aC.currentTime+.25);}catch(e){}
+};
+
+// 胜利 — 欢快旋律
+const sndWin=()=>{[523,659,784,880,1047,1319,1568].forEach((f,i)=>chime(f,f*1.5,.18,.1,i*.1))};
+
+// 道具激活 — 闪亮音
+const sndTool=()=>{chime(1000,1500,.1,.08,0);chime(1400,2100,.12,.08,.04)};
+
+// 锤子 — 厚实敲击
+const sndHammer=()=>{tone(200,.15,.1,'triangle',0);tone(150,.2,.06,'sine',.03);chime(800,1200,.1,.05,.02)};
+
+// 魔法 — 瀑布般下行闪光音
+const sndMagic=()=>{[1400,1200,1000,800,1000,1200,1400,1600].forEach((f,i)=>tone(f,.1,.08,'sine',i*.04))};
+
+// 乐小星收集 — 梦幻音
+const sndStar=()=>{chime(1047,1568,.15,.1,0);chime(1319,1976,.18,.1,.08);chime(1568,2093,.2,.1,.16)};
+
+// 交换失败（无匹配时）
+const sndSwapFail=()=>{tone(250,.12,.06,'triangle',0);tone(200,.1,.04,'triangle',.06)};
+
+// 棋子下落 — 轻柔落地声
+const sndDrop=()=>tone(400,.06,.04,'sine',0);
+
+// 刷新道具 — 洗牌旋转音
+const sndRefresh=()=>{[600,700,800,900,800,700,600].forEach((f,i)=>tone(f,.08,.07,'triangle',i*.04))};
+
+// 步数即将用完（<=5步） — 提醒音
+const sndLowMoves=()=>{tone(880,.1,.08,'sine',0);tone(660,.15,.08,'sine',.1)};
+
+// 游戏结束 — 失落下行
+const sndLose=()=>{[523,466,392,330,262].forEach((f,i)=>tone(f,.2,.08,'triangle',i*.15))};
+
+/* ── 背景音乐 BGM ── */
+let bgmOn = false, bgmTimer = null, bgmVol = .025;
+let soundOn = true;   // 全局声音开关
+const SND_BTN_X = 45, SND_BTN_Y = 556, SND_BTN_R = 24; // 静音按钮位置和半径
+const PAUSE_BTN_X = 105, PAUSE_BTN_Y = 556, PAUSE_BTN_R = 24; // 暂停按钮位置和半径
+// 简单欢快循环旋律 (C大调五声音阶)
+const BGM_MELODY = [
+    523,587,659,784, 659,587,523,440,
+    392,440,523,587, 659,784,880,784,
+    659,523,587,659, 523,440,392,440,
+    523,659,784,880, 784,659,523,587,
+];
+function bgmNote(idx) {
+    if(!bgmOn || !aC) return;
+    const f = BGM_MELODY[idx % BGM_MELODY.length];
+    tone(f, .22, bgmVol, 'sine', 0);
+    tone(f*.5, .22, bgmVol*.4, 'triangle', 0); // 低音伴奏
+}
+function bgmStart() {
+    if(bgmOn) return;
+    bgmOn = true;
+    let beat = 0;
+    bgmTimer = setInterval(()=>{
+        if(!bgmOn){clearInterval(bgmTimer);return;}
+        bgmNote(beat++);
+    }, 240);
+}
+function bgmStop() { bgmOn=false; if(bgmTimer) clearInterval(bgmTimer); }
+
+/* ── 6 种普通棋子 + 乐小星(特殊) ── */
+const GEMS = [
+    { name:'橙色圆形',  file:'橙色圆形.png',  color:'#FF9900' },
+    { name:'红色心形',  file:'红色爱心.png',  color:'#FF3366' },
+    { name:'紫色三角',  file:'紫色三角形.png', color:'#9966CC' },
+    { name:'绿色五边形',file:'绿色五边形.png', color:'#33CC66' },
+    { name:'黄色星形',  file:'黄色五角星.png', color:'#FFCC00' },
+    { name:'蓝色星形',  file:'蓝色五角星.png', color:'#3399FF' },
+    { name:'乐小星',    file:'乐小星棋子.png', color:'#FFD700' },
+];
+const GEM_COUNT = 6;
+const STAR_TYPE = 6;
+
+const gemImgs=[];
+let imgsReady=false;
+GEMS.forEach((g,i)=>{
+    const img=new Image();
+    img.onload=()=>{ if(gemImgs.every(x=>x.complete&&x.naturalWidth>0)) imgsReady=true; };
+    img.onerror=()=>{ console.warn('image load fail:',g.file); };
+    img.src=g.file;
+    gemImgs.push(img);
+});
+const bgImg=new Image(); bgImg.src='消消乐背景.png';
+
+/* ── 4种道具 ── */
+const TOOLS = [
+    { name:'锤子', file:'道具锤子.png' },
+    { name:'交换', file:'道具交换.png' },
+    { name:'魔法', file:'道具魔法.png' },
+    { name:'刷新', file:'道具刷新.png' },
+];
+const toolImgs=[];
+TOOLS.forEach((t)=>{
+    const img=new Image();
+    img.onerror=()=>{ console.warn('image load fail:',t.file); };
+    img.src=t.file;
+    toolImgs.push(img);
+});
+// 音量图标
+const sndOnImg=new Image(); sndOnImg.src='音量开.png';
+const sndOffImg=new Image(); sndOffImg.src='音量关.png';
+// 道具面板位置 (每个道具单独调整)
+const TOOL_SCALE = 0.6;        // 道具缩放比例（0.7=70%, 1=原尺寸）
+const TOOL_IW = 71 * TOOL_SCALE;
+const TOOL_IH = 77 * TOOL_SCALE;
+const TOOL_POS = [
+    { x: 799, y: 168, bx: 4, by: 4.5 },  // 锤子 中心位置 + 徽章偏移
+    { x: 802, y: 244, bx: 1, by: 2.5 },  // 交换
+    { x: 801, y: 316, bx: 2, by: 3.5 },  // 魔法
+    { x: 801, y: 390, bx: 2, by: 1.5 },  // 刷新
+];
+let toolCounts = [1,1,1,1];
+let readyBtnY = 0; // 开始按钮实际Y坐标（drawReady中更新）
+let activeTool = -1;
+let toolStep = 0;
+let toolFirst = null;
+
+/* ── 远程配置 ── */
+let _cfg = null; // null = 未加载
+async function loadGameConfig(){
+    try{
+        const r=await fetch('/api/game-config');
+        if(r.ok){ const d=await r.json(); _cfg=d.xiaoxiaole||{}; }
+    }catch(e){}
+    applyConfig();
+}
+function applyConfig(){
+    if(!_cfg) return;
+    STAR_TARGET = _cfg.STAR_TARGET ?? STAR_TARGET;
+    MOVES = _cfg.MOVES ?? MOVES;
+    INITIAL_STARS = _cfg.INITIAL_STARS ?? INITIAL_STARS;
+    STAR_SPAWN_INTERVAL = _cfg.STAR_SPAWN_INTERVAL ?? STAR_SPAWN_INTERVAL;
+    MAX_TOOLS = _cfg.MAX_TOOLS ?? MAX_TOOLS;
+    bgmVol = _cfg.bgmVol ?? bgmVol;
+    if(_cfg.toolCounts) toolCounts = [..._cfg.toolCounts];
+    if(_cfg.matchScores){
+        for(const k of Object.keys(_cfg.matchScores)){
+            if(MATCH_REWARDS[k]) MATCH_REWARDS[k].score = _cfg.matchScores[k];
+        }
+    }
+}
+
+/* ── Mobile detection & perf caps (must be before everything) ── */
+const _isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+const PARTICLE_CAP = 60;
+const FLIGHT_DUR = 500;
+let _lastTime = performance.now();
+
+/* ── Board ── */
+const ROWS = 9, COLS = 9;
+let STAR_TARGET = 9;
+let MOVES = 30;
+let INITIAL_STARS = 4;
+let STAR_SPAWN_INTERVAL = 4;
+let MAX_TOOLS = 99;
+let stepsSinceStarSpawn = 0;
+let lastSpawnCol = -1; // 上一次周期投放的列，排除该列
+let initialStarCols = []; // 开局投放乐小星的列
+let tileSize = 0, boardX = 0, boardY = 0;
+let stepX = 0, stepY = 0;
+const GEM_SIZE = 41, GAP_X = 6.5, GAP_Y = 6;
+function calcLayout() {
+    stepX = GEM_SIZE + GAP_X;
+    stepY = GEM_SIZE + GAP_Y;
+    tileSize = stepX;
+    const bw = COLS * stepX - GAP_X, bh = ROWS * stepY - GAP_Y;
+    boardX = 126 + (DW - 240 - bw) / 2;
+    boardY = -3 + (DH - 40 - bh) / 2;
+}
+calcLayout();
+
+/* ── State ── */
+let grid=[], animY=[];
+let state='ready', score=0, stepsTaken=0, combo=0;
+let paused=false; // 暂停状态
+let sel=null, dragS=null, swapAn=null;
+let particles=[], popups=[];
+let starsCollected=0;
+let starFlights=[]; // 飞向信息栏的星光
+let panelStarBounce=0; // 信息栏乐小星到达时的弹跳效果
+let toolFlights=[]; // 道具奖励飞行动画
+let pendingAbove=[]; // 每列上方待入场的乐小星队列
+let panelToolBounce=[0,0,0,0]; // 道具面板弹跳
+let scoreFlights=[]; // 加分飞行动画
+let scoreQueue=[]; // 加分排队队列
+let panelScoreBounce=0; // 分数面板弹跳
+const MAX_TOOLS_OLD=99; // 道具上限（已移到上方由配置控制）
+// 初始化棋盘供ready界面显示
+initBoard();
+const MATCH_REWARDS={
+    '3':      {score:30,  tools:[]},
+    '4':      {score:80,  tools:[0]},
+    '5':      {score:200, tools:[1,0]},
+    'L_T':    {score:200, tools:[2,0]},
+    'cross4': {score:300, tools:[2,1,0]},
+    'cross5': {score:500, tools:[2,1,0,3]},
+};
+
+function countBoardStars() {
+    let n=0;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) if(grid[r][c]===STAR_TYPE) n++;
+    for(let c=0;c<COLS;c++) n+=pendingAbove[c].length;
+    return n;
+}
+function spawnOneStar(upperHalf, withDrop) {
+    const maxR = upperHalf ? Math.floor(ROWS/2) : ROWS;
+    let tries=0;
+    while(tries<200){
+        const r=Math.floor(Math.random()*maxR);
+        const c=Math.floor(Math.random()*COLS);
+        if(grid[r][c]>=0 && grid[r][c]!==STAR_TYPE){
+            grid[r][c]=STAR_TYPE;
+            if(withDrop) animY[r][c]=-(ROWS)*stepY - stepY*2;
+            return {r,c};
+        }
+        tries++;
+    }
+    return null;
+}
+function spawnStars(count) {
+    // 随机选 count 个不同的列
+    const shuffled = [];
+    for(let c=0;c<COLS;c++) shuffled.push(c);
+    for(let i=shuffled.length-1;i>0;i--){
+        const j=Math.floor(Math.random()*(i+1));
+        [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+    }
+    const pickedCols = shuffled.slice(0, count);
+    initialStarCols = [...pickedCols];
+    for(const c of pickedCols){
+        let tries=0, placed=false;
+        while(tries<200 && !placed){
+            const r=Math.floor(Math.random()*Math.floor(ROWS/2));
+            if(grid[r][c]>=0 && grid[r][c]!==STAR_TYPE){
+                grid[r][c]=STAR_TYPE;
+                emit(boardX+c*stepX+stepX/2, boardY+r*stepY+stepY/2, '#ffd700', 10);
+                placed=true;
+            }
+            tries++;
+        }
+    }
+}
+
+function initBoard() {
+    grid=[]; animY=[]; pendingAbove=[];
+    starsCollected=0; stepsSinceStarSpawn=0; lastSpawnCol=-1;
+    for(let r=0;r<ROWS;r++){
+        grid[r]=[]; animY[r]=[];
+        for(let c=0;c<COLS;c++){
+            grid[r][c]=rndGem(r,c);
+            animY[r][c]=0;
+        }
+    }
+    for(let c=0;c<COLS;c++) pendingAbove[c]=[];
+    spawnStars(INITIAL_STARS);
+    if(!hasValidMove()) reshuffleBoard();
+}
+
+function rndGem(r,c) {
+    let t, tries = 0;
+    do { t = Math.floor(Math.random()*GEM_COUNT); tries++; }
+    while (tries < 20 && wouldMatch(r,c,t));
+    return t;
+}
+function wouldMatch(r,c,t) {
+    if(c>=2 && grid[r][c-1]===t && grid[r][c-2]===t) return true;
+    if(r>=2 && grid[r-1] && grid[r-1][c]===t && grid[r-2] && grid[r-2][c]===t) return true;
+    return false;
+}
+
+/* ── Match finding (增强：识别4消/5消/L_T/十字消) ── */
+function findMatchGroups() {
+    const runs = [];
+    // 水平连续
+    for(let r=0;r<ROWS;r++){
+        let c=0;
+        while(c<COLS){
+            if(grid[r][c]<0||grid[r][c]===STAR_TYPE){c++;continue;}
+            const t=grid[r][c]; let l=1;
+            while(c+l<COLS&&grid[r][c+l]===t) l++;
+            if(l>=3){
+                const cells=[];
+                for(let i=0;i<l;i++) cells.push({r,c:c+i});
+                runs.push({cells,dir:'h',len:l,type:t});
+            }
+            c+=l;
+        }
+    }
+    // 垂直连续
+    for(let c=0;c<COLS;c++){
+        let r=0;
+        while(r<ROWS){
+            if(grid[r][c]<0||grid[r][c]===STAR_TYPE){r++;continue;}
+            const t=grid[r][c]; let l=1;
+            while(r+l<ROWS&&grid[r+l][c]===t) l++;
+            if(l>=3){
+                const cells=[];
+                for(let i=0;i<l;i++) cells.push({r:r+i,c});
+                runs.push({cells,dir:'v',len:l,type:t});
+            }
+            r+=l;
+        }
+    }
+    // 检测交叉(十字消/L_T)
+    const merged=new Set();
+    const groups=[];
+    for(let i=0;i<runs.length;i++){
+        if(merged.has(i)) continue;
+        for(let j=i+1;j<runs.length;j++){
+            if(merged.has(j)||runs[i].type!==runs[j].type) continue;
+            const setA=new Set(runs[i].cells.map(c=>`${c.r},${c.c}`));
+            if(runs[j].cells.some(c=>setA.has(`${c.r},${c.c}`))){
+                // 合并交叉
+                const all=[...runs[i].cells,...runs[j].cells];
+                const uniq=[],seen=new Set();
+                for(const cell of all){const k=`${cell.r},${cell.c}`;if(!seen.has(k)){seen.add(k);uniq.push(cell);}}
+                const hRun=runs[i].dir==='h'?runs[i]:runs[j];
+                const vRun=runs[i].dir==='v'?runs[i]:runs[j];
+                const hLen=hRun.len, vLen=vRun.len;
+                // 爆炸中心：水平行的行号 + 垂直列的列号
+                const blastRow=hRun.cells[0].r;
+                const blastCol=vRun.cells[0].c;
+                let mt;
+                if(hLen>=5||vLen>=5) mt='cross5';
+                else if(hLen>=4||vLen>=4) mt='cross4';
+                else mt='L_T';
+                groups.push({cells:uniq,matchType:mt,blastRow,blastCol});
+                merged.add(i); merged.add(j);
+                break;
+            }
+        }
+    }
+    // 未交叉的独立线消
+    for(let i=0;i<runs.length;i++){
+        if(merged.has(i)) continue;
+        let mt='3';
+        if(runs[i].len>=5) mt='5';
+        else if(runs[i].len>=4) mt='4';
+        groups.push({cells:runs[i].cells,matchType:mt});
+    }
+    return groups;
+}
+
+function removeMatchGroups(groups) {
+    if(!groups.length) return false;
+    combo++;
+    const allCells=new Map(); // key -> {r,c}
+    let totalPts=0;
+    const toolRewards=[];
+    for(const g of groups){
+        const reward=MATCH_REWARDS[g.matchType];
+        totalPts+=reward.score*combo;
+        // 基础消除格子
+        for(const cell of g.cells){
+            const k=`${cell.r},${cell.c}`;
+            if(!allCells.has(k)) allCells.set(k,cell);
+        }
+        for(const ti of reward.tools) toolRewards.push(ti);
+        // 十字5消：整行整列爆炸（跳过乐小星）
+        if(g.matchType==='cross5'&&(g.blastRow!==undefined||g.blastCol!==undefined)){
+            const blastRow=g.blastRow, blastCol=g.blastCol;
+            if(blastRow!==undefined){
+                for(let c=0;c<COLS;c++){
+                    const k=`${blastRow},${c}`;
+                    if(!allCells.has(k)&&grid[blastRow][c]>=0&&grid[blastRow][c]!==STAR_TYPE)
+                        allCells.set(k,{r:blastRow,c});
+                }
+            }
+            if(blastCol!==undefined){
+                for(let r=0;r<ROWS;r++){
+                    const k=`${r},${blastCol}`;
+                    if(!allCells.has(k)&&grid[r][blastCol]>=0&&grid[r][blastCol]!==STAR_TYPE)
+                        allCells.set(k,{r,c:blastCol});
+                }
+            }
+        }
+    }
+    // 分数不立即加，等飞行到达再加
+    // 移除+粒子
+    let cx=0,cy=0,cnt=0;
+    for(const [k,m] of allCells){
+        const g=GEMS[grid[m.r][m.c]];
+        if(g){
+            const px=boardX+m.c*stepX+stepX/2, py=boardY+m.r*stepY+stepY/2;
+            emit(px,py,g.color,6);
+            cx+=px; cy+=py; cnt++;
+        }
+        grid[m.r][m.c]=-1;
+    }
+    if(cnt>0){
+        cx/=cnt; cy/=cnt;
+        // 排队加分飞行
+        scoreQueue.push({sx:cx,sy:cy,pts:totalPts});
+    }
+    // 道具奖励飞行动画
+    for(const ti of toolRewards){
+        if(toolCounts[ti]>=MAX_TOOLS) continue;
+        toolFlights.push({toolIdx:ti,sx:cx,sy:cy,t:0});
+    }
+    combo>1?sndCombo():sndMatch();
+    return true;
+}
+
+function dropGems() {
+    let dropped = false;
+    for(let c=0;c<COLS;c++){
+        let empty = ROWS-1;
+        for(let r=ROWS-1;r>=0;r--){
+            if(grid[r][c]>=0){
+                if(r!==empty){
+                    grid[empty][c]=grid[r][c]; grid[r][c]=-1;
+                    animY[empty][c]=-(empty-r)*stepY;
+                    dropped = true;
+                }
+                empty--;
+            }
+        }
+        for(let r=empty;r>=0;r--){
+            if(pendingAbove[c]&&pendingAbove[c].length>0){
+                grid[r][c]=pendingAbove[c].shift();
+            } else {
+                grid[r][c]=Math.floor(Math.random()*GEM_COUNT);
+            }
+            animY[r][c]=-(empty-r+1)*stepY - stepY;
+            dropped = true;
+        }
+    }
+    if(dropped) sndDrop();
+}
+
+function collectStars() {
+    let collected = 0;
+    for(let c=0;c<COLS;c++){
+        if(grid[ROWS-1][c]===STAR_TYPE){
+            grid[ROWS-1][c] = -1;
+            collected++;
+            const px=boardX+c*stepX+stepX/2, py=boardY+(ROWS-1)*stepY+stepY/2;
+            // 起飞爆散粒子
+            for(let i=0;i<12;i++){
+                const a=Math.random()*Math.PI*2, sp=2+Math.random()*3;
+                particles.push({x:px,y:py,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-2,life:1,dec:.015,sz:3+Math.random()*4,col:'#ffd700'});
+            }
+            // 添加飞行动画：从棋盘位置飞向信息栏乐小星位置(105, 218)
+            starFlights.push({ sx:px, sy:py, t:0 });
+            sndStar();
+        }
+    }
+    return collected;
+}
+
+function hasValidMove() {
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        if(c<COLS-1){
+            [grid[r][c],grid[r][c+1]]=[grid[r][c+1],grid[r][c]];
+            if(findMatchGroups().length>0){[grid[r][c],grid[r][c+1]]=[grid[r][c+1],grid[r][c]];return true;}
+            [grid[r][c],grid[r][c+1]]=[grid[r][c+1],grid[r][c]];
+        }
+        if(r<ROWS-1){
+            [grid[r][c],grid[r+1][c]]=[grid[r+1][c],grid[r][c]];
+            if(findMatchGroups().length>0){[grid[r][c],grid[r+1][c]]=[grid[r+1][c],grid[r][c]];return true;}
+            [grid[r][c],grid[r+1][c]]=[grid[r+1][c],grid[r][c]];
+        }
+    }
+    return false;
+}
+
+function reshuffleBoard() {
+    let tries=0;
+    do{
+        const flat=[];
+        for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) flat.push(grid[r][c]);
+        for(let i=flat.length-1;i>0;i--){const j=0|Math.random()*(i+1);[flat[i],flat[j]]=[flat[j],flat[i]];}
+        let k=0;
+        for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) grid[r][c]=flat[k++];
+        tries++;
+    } while(!hasValidMove()&&tries<50);
+}
+
+/* ── Swap logic ── */
+async function trySwap(r1,c1,r2,c2) {
+    if(state!=='playing') return;
+    state='animating';
+    try{
+    await animSwap(r1,c1,r2,c2);
+    [grid[r1][c1],grid[r2][c2]]=[grid[r2][c2],grid[r1][c1]];
+    if(findMatchGroups().length===0){
+        [grid[r1][c1],grid[r2][c2]]=[grid[r2][c2],grid[r1][c1]];
+        await animSwap(r1,c1,r2,c2);
+        sndSwapFail(); state='playing'; return;
+    }
+    stepsTaken++; combo=0; sndSwap();
+    stepsSinceStarSpawn++;
+    if(stepsSinceStarSpawn>=STAR_SPAWN_INTERVAL && (starsCollected+countBoardStars()+starFlights.length)<STAR_TARGET){
+        stepsSinceStarSpawn=0;
+        // 排除：上次投放列、pendingAbove已有乐小星的列、棋盘上已有乐小星的列
+        const cols=[];
+        for(let c=0;c<COLS;c++){
+            if(c===lastSpawnCol) continue;
+            if(pendingAbove[c].length>0) continue;
+            let hasStar=false;
+            for(let r=0;r<ROWS;r++) if(grid[r][c]===STAR_TYPE){hasStar=true;break;}
+            if(hasStar) continue;
+            cols.push(c);
+        }
+        if(cols.length>0){
+            const c=cols[Math.floor(Math.random()*cols.length)];
+            pendingAbove[c].push(STAR_TYPE);
+            lastSpawnCol=c;
+        }
+    }
+    await processChain();
+    if(starsCollected>=STAR_TARGET){state='win';sndWin();bgmStop();return;}
+    if(!hasValidMove()) reshuffleBoard();
+    if(!hasValidMove()) reshuffleBoard();
+    state='playing';
+    }catch(e){console.error(e);state='playing';}
+}
+async function processChain() {
+    let m=findMatchGroups();
+    while(m.length>0){
+        removeMatchGroups(m);
+        await delay(120);
+        dropGems();
+        let collected = collectStars();
+        if(collected > 0){
+            await delay(100);
+            dropGems();
+        }
+        await delay(150);
+        m=findMatchGroups();
+    }
+}
+function animSwap(r1,c1,r2,c2) {
+    return new Promise(res=>{
+        swapAn={r1,c1,r2,c2,p:0,res};
+    });
+}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+/* ── Tool execution ── */
+async function useHammer(r, c) {
+    if(state!=='playing') return;
+    state='animating'; activeTool=-1;
+    toolCounts[0]--;
+    const g=GEMS[grid[r][c]];
+    const px=boardX+c*stepX+stepX/2, py=boardY+r*stepY+stepY/2;
+    emit(px,py,g.color,12);
+    sndHammer();
+    grid[r][c]=-1;
+    await delay(200);
+    dropGems();
+    collectStars();
+    await delay(150);
+    dropGems();
+    await processChain();
+    if(starsCollected>=STAR_TARGET){state='win';sndWin();return;}
+    if(!hasValidMove()) reshuffleBoard();
+    state='playing';
+}
+
+async function useToolSwap(r1,c1,r2,c2) {
+    if(state!=='playing') return;
+    state='animating'; activeTool=-1;
+    toolCounts[1]--;
+    await animSwap(r1,c1,r2,c2);
+    [grid[r1][c1],grid[r2][c2]]=[grid[r2][c2],grid[r1][c1]];
+    sndSwap();
+    await delay(150);
+    // 交换后立即检查底行乐小星收集（修复交换道具把星移到底行不结算的bug）
+    collectStars();
+    await delay(150);
+    dropGems();
+    // 强制交换后检查匹配
+    await processChain();
+    if(starsCollected>=STAR_TARGET){state='win';sndWin();bgmStop();return;}
+    if(!hasValidMove()) reshuffleBoard();
+    state='playing';
+}
+
+async function useMagic(r, c) {
+    if(state!=='playing') return;
+    state='animating'; activeTool=-1;
+    toolCounts[2]--;
+    const targetType=grid[r][c];
+    let count=0;
+    for(let rr=0;rr<ROWS;rr++) for(let cc=0;cc<COLS;cc++){
+        if(grid[rr][cc]===targetType){
+            emit(boardX+cc*stepX+stepX/2, boardY+rr*stepY+stepY/2, GEMS[targetType].color, 4);
+            grid[rr][cc]=-1;
+            count++;
+        }
+    }
+    scoreQueue.push({sx:boardX+c*stepX+stepX/2,sy:boardY+r*stepY+stepY/2,pts:count*10});
+    sndMagic();
+    await delay(300);
+    dropGems();
+    collectStars();
+    await delay(150);
+    dropGems();
+    await processChain();
+    if(starsCollected>=STAR_TARGET){state='win';sndWin();return;}
+    if(!hasValidMove()) reshuffleBoard();
+    state='playing';
+}
+
+async function useRefresh() {
+    if(state!=='playing') return;
+    state='animating';
+    activeTool=-1;
+    toolCounts[3]--;
+    sndRefresh();
+    // 收集普通棋子，打乱后放回（乐小星不动）
+    const normals=[];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        if(grid[r][c]>=0 && grid[r][c]!==STAR_TYPE) normals.push(grid[r][c]);
+    }
+    for(let i=normals.length-1;i>0;i--){
+        const j=0|Math.random()*(i+1);
+        [normals[i],normals[j]]=[normals[j],normals[i]];
+    }
+    let k=0;
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        if(grid[r][c]===STAR_TYPE) continue;
+        if(grid[r][c]>=0) grid[r][c]=normals[k++];
+    }
+    // 只保证有有效步，不避免三消（三消是额外奖励）
+    if(!hasValidMove()) reshuffleBoard();
+    // 自动消除洗出的匹配
+    await delay(300);
+    await processChain();
+    if(starsCollected>=STAR_TARGET){state='win';sndWin();return;}
+    state='playing';
+}
+
+/* ── Particles ── */
+function emit(x,y,col,n) {
+    if(particles.length >= PARTICLE_CAP) return;
+    const count = _isMobile ? Math.ceil(n/2) : n;
+    for(let i=0;i<count;i++){
+        const a=Math.random()*Math.PI*2, sp=1+Math.random()*3;
+        particles.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-1,life:1,dec:.02+Math.random()*.02,sz:2+Math.random()*3,col});
+    }
+}
+
+/* ── Input ── */
+function s2g(sx,sy){
+    const mx=(sx-ox)/sc, my=(sy-oy)/sc;
+    const c=Math.floor((mx-boardX)/stepX), r=Math.floor((my-boardY)/stepY);
+    if(r>=0&&r<ROWS&&c>=0&&c<COLS) return{r,c};
+    return null;
+}
+
+function hitTestTools(sx,sy) {
+    const mx=(sx-ox)/sc, my=(sy-oy)/sc;
+    for(let i=0;i<TOOLS.length;i++){
+        const tx=TOOL_POS[i].x-TOOL_IW/2, ty=TOOL_POS[i].y-TOOL_IH/2;
+        if(mx>=tx && mx<=tx+TOOL_IW && my>=ty && my<=ty+TOOL_IH)
+            return i;
+    }
+    return -1;
+}
+
+function onDown(sx,sy){
+    ensA();
+    // 检测静音按钮
+    const smx=(sx-ox)/sc, smy=(sy-oy)/sc;
+    const sdx=smx-SND_BTN_X, sdy=smy-SND_BTN_Y;
+    if(sdx*sdx+sdy*sdy<=SND_BTN_R*SND_BTN_R){toggleSound();return;}
+    // 检测暂停按钮
+    const pdx=smx-PAUSE_BTN_X, pdy=smy-PAUSE_BTN_Y;
+    if(pdx*pdx+pdy*pdy<=PAUSE_BTN_R*PAUSE_BTN_R && (state==='playing'||paused)){
+        paused=!paused;
+        if(paused) bgmStop(); else if(soundOn) bgmStart();
+        return;
+    }
+    // 暂停界面按钮点击
+    if(paused){
+        const ppw=320, pph=280;
+        const ppx=DW/2-ppw/2, ppy=DH/2-pph/2;
+        const pbW=220, pbH=48;
+        const pbX=DW/2-pbW/2, pbY=ppy+125;
+        // 继续游戏按钮
+        if(smx>=pbX&&smx<=pbX+pbW&&smy>=pbY&&smy<=pbY+pbH){
+            paused=false; if(soundOn) bgmStart();
+            return;
+        }
+        // 返回主页按钮
+        const pb2Y=pbY+pbH+16;
+        if(smx>=pbX&&smx<=pbX+pbW&&smy>=pb2Y&&smy<=pb2Y+pbH){
+            paused=false; bgmStop();
+            goHome();
+            return;
+        }
+        return;
+    }
+    if(state==='ready'){
+        const rmx=(sx-ox)/sc, rmy=(sy-oy)/sc;
+        const bx=DW/2-110, bw=220, bh=48;
+        if(rmx>=bx && rmx<=bx+bw && rmy>=readyBtnY && rmy<=readyBtnY+bh){
+            startGame();
+        }
+        return;
+    }
+    if(state==='win'||state==='lose'){
+        const allDone=scoreQueue.length===0&&scoreFlights.length===0&&starFlights.length===0;
+        if(allDone){
+            const rmx=(sx-ox)/sc, rmy=(sy-oy)/sc;
+            const rcx=DW/2;
+            const pw=390,ph=380, ppx=rcx-pw/2, ppy=DH/2-ph/2;
+            const btnGap=16, btnAreaW=pw-60, singleBtnW=(btnAreaW-btnGap)/2, btnH=46;
+            const btnAreaX=ppx+30, btnY=ppy+ph-70;
+            const btn1X=btnAreaX, btn2X=btnAreaX+singleBtnW+btnGap;
+            // 再来一局
+            if(rmx>=btn1X&&rmx<=btn1X+singleBtnW&&rmy>=btnY&&rmy<=btnY+btnH){
+                state='ready'; bgmStop();
+            }
+            // 返回主页
+            if(rmx>=btn2X&&rmx<=btn2X+singleBtnW&&rmy>=btnY&&rmy<=btnY+btnH){
+                bgmStop(); goHome();
+            }
+        }
+        return;
+    }
+    if(state!=='playing') return;
+
+    // 检测道具按钮点击
+    const ti=hitTestTools(sx,sy);
+    if(ti>=0){
+        if(toolCounts[ti]<=0) return;
+        if(activeTool===ti){ activeTool=-1; toolStep=0; toolFirst=null; return; }
+        // 刷新道具直接执行
+        if(ti===3){ useRefresh(); return; }
+        activeTool=ti; toolStep=0; toolFirst=null;
+        sndTool();
+        return;
+    }
+
+    // 棋盘点击
+    const cell=s2g(sx,sy);
+    if(!cell) return;
+
+    // 道具模式
+    if(activeTool>=0){
+        handleToolAction(cell);
+        return;
+    }
+
+    // 普通交换逻辑
+    if(sel){
+        const dr=Math.abs(cell.r-sel.r), dc=Math.abs(cell.c-sel.c);
+        if((dr===1&&dc===0)||(dr===0&&dc===1)){trySwap(sel.r,sel.c,cell.r,cell.c);sel=null;return;}
+    }
+    sel=cell; dragS={sx,sy,r:cell.r,c:cell.c};
+}
+
+function handleToolAction(cell) {
+    const t=grid[cell.r][cell.c];
+    if(activeTool===0){ // 锤子
+        if(t<0 || t===STAR_TYPE) return;
+        useHammer(cell.r, cell.c);
+    } else if(activeTool===1){ // 交换
+        if(t<0) return;
+        if(toolStep===0){
+            toolFirst=cell; toolStep=1;
+        } else {
+            if(!toolFirst) return;
+            const dr=Math.abs(cell.r-toolFirst.r), dc=Math.abs(cell.c-toolFirst.c);
+            if(!((dr===1&&dc===0)||(dr===0&&dc===1))){ toolFirst=cell; return; }
+            useToolSwap(toolFirst.r, toolFirst.c, cell.r, cell.c);
+            toolStep=0; toolFirst=null;
+        }
+    } else if(activeTool===2){ // 魔法
+        if(t<0 || t===STAR_TYPE) return;
+        useMagic(cell.r, cell.c);
+    }
+}
+
+function onMove(sx,sy){
+    if(!dragS||state!=='playing'||activeTool>=0) return;
+    const dx=sx-dragS.sx, dy=sy-dragS.sy;
+    const thr=stepX*sc*.3;
+    if(Math.abs(dx)>thr||Math.abs(dy)>thr){
+        let tr=dragS.r, tc=dragS.c;
+        if(Math.abs(dx)>Math.abs(dy)) tc+=dx>0?1:-1; else tr+=dy>0?1:-1;
+        if(tr>=0&&tr<ROWS&&tc>=0&&tc<COLS) trySwap(dragS.r,dragS.c,tr,tc);
+        sel=null; dragS=null;
+    }
+}
+function onUp(){dragS=null;}
+
+canvas.addEventListener('touchstart',e=>{e.preventDefault();onDown(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+canvas.addEventListener('touchmove',e=>{e.preventDefault();onMove(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
+canvas.addEventListener('touchend',onUp);
+canvas.addEventListener('mousedown',e=>{e.preventDefault();onDown(e.clientX,e.clientY);});
+canvas.addEventListener('mousemove',e=>onMove(e.clientX,e.clientY));
+
+/* ── 乐小星流光火彩公共函数 ── */
+function drawStarGlow(cx,cy,radius){
+    const breathe=.45+.35*Math.sin(_now/600);
+    // 金色光晕
+    const gr=radius*1.5;
+    const g0=ctx.createRadialGradient(cx,cy,radius*.3,cx,cy,gr);
+    g0.addColorStop(0,'rgba(255,215,0,'+(0.15+0.2*breathe)+')');
+    g0.addColorStop(.6,'rgba(255,215,0,'+(0.08+0.1*breathe)+')');
+    g0.addColorStop(1,'rgba(255,215,0,0)');
+    ctx.fillStyle=g0;
+    ctx.beginPath(); ctx.arc(cx,cy,gr,0,Math.PI*2); ctx.fill();
+}
+
+function drawStarFire(cx,cy,radius){
+    const fireColors=['#FFFFFF','#FFF8DC','#FFE4B5','#FFD700','#FFEC8B','#FFFACD'];
+    // 旋转流光点
+    const sparkCount=_isMobile?2:3;
+    for(let i=0;i<sparkCount;i++){
+        const angle=(_now/1200+i*Math.PI*2/sparkCount)%(Math.PI*2);
+        const dist=radius*.55+radius*.4*Math.sin(_now/500+i*2);
+        const sx=cx+Math.cos(angle)*dist;
+        const sy=cy+Math.sin(angle)*dist;
+        ctx.globalAlpha=.2+.8*Math.pow(Math.abs(Math.sin(_now/250+i*3)),2);
+        ctx.fillStyle=fireColors[(i+Math.floor(_now/300))%fireColors.length];
+        ctx.beginPath();
+        const ss=radius*.12+radius*.09*Math.abs(Math.sin(_now/180+i*1.7));
+        drawSparkle(ctx,sx,sy,ss);
+        ctx.fill();
+    }
+    // 扫光
+    const sweepAngle=(_now/800)%(Math.PI*2);
+    const sweepX=cx+Math.cos(sweepAngle)*radius*.6;
+    const sweepY=cy+Math.sin(sweepAngle)*radius*.6;
+    const sweepG=ctx.createRadialGradient(sweepX,sweepY,0,sweepX,sweepY,radius*.35);
+    sweepG.addColorStop(0,'rgba(255,255,255,'+(0.3+0.3*Math.sin(_now/200))+')');
+    sweepG.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.globalAlpha=1;
+    ctx.fillStyle=sweepG;
+    ctx.beginPath(); ctx.arc(sweepX,sweepY,radius*.35,0,Math.PI*2); ctx.fill();
+    ctx.globalAlpha=1;
+}
+canvas.addEventListener('mouseup',onUp);
+
+/* ── Start ── */
+function startGame(){
+    score=0; stepsTaken=0; combo=0; starsCollected=0; stepsSinceStarSpawn=0; lastSpawnCol=-1;
+    particles=[]; popups=[]; sel=null; swapAn=null; paused=false;
+    starFlights=[]; toolFlights=[]; scoreFlights=[]; scoreQueue=[];
+    panelToolBounce=[0,0,0,0]; panelScoreBounce=0;
+    for(let c=0;c<COLS;c++) pendingAbove[c]=[];
+    toolCounts=[1,1,1,101]; activeTool=-1; toolStep=0; toolFirst=null;
+    initBoard(); state='playing';
+    bgmStart();
+}
+
+/* ====== Drawing ====== */
+function drawSparkle(c,x,y,s){
+    c.beginPath();
+    c.moveTo(x,y-s); c.lineTo(x+s*.3,y-s*.3);
+    c.lineTo(x+s,y); c.lineTo(x+s*.3,y+s*.3);
+    c.lineTo(x,y+s); c.lineTo(x-s*.3,y+s*.3);
+    c.lineTo(x-s,y); c.lineTo(x-s*.3,y-s*.3);
+    c.closePath();
+}
+function drawGem(r,c){
+    const t=grid[r][c]; if(t<0) return;
+    const g=GEMS[t];
+    const ay=animY[r][c];
+    if(ay<-.5){
+        animY[r][c]+=Math.max((-ay)*.15, 6);
+        if(animY[r][c]>2) animY[r][c]=0;
+    } else animY[r][c]=0;
+
+    let px=boardX+c*stepX, py=boardY+r*stepY+animY[r][c];
+    if(swapAn){
+        const{r1,c1,r2,c2,p}=swapAn;
+        const ep=Math.sin(p*Math.PI/2);
+        if(r===r1&&c===c1){px+=(c2-c1)*stepX*ep;py+=(r2-r1)*stepY*ep;}
+        else if(r===r2&&c===c2){px+=(c1-c2)*stepX*ep;py+=(r1-r2)*stepY*ep;}
+    }
+
+    const ox2=(stepX-GEM_SIZE)/2, oy2=(stepY-GEM_SIZE)/2;
+    const img=gemImgs[t];
+
+    // 乐小星呼吸发光
+    const isStar = t===STAR_TYPE;
+    if(isStar){
+        drawStarGlow(px+stepX/2, py+stepY/2, GEM_SIZE/2);
+    }
+
+    // 选中高亮 — 圆形光晕，不用shadowBlur
+    const isSel=sel&&sel.r===r&&sel.c===c;
+    const isToolSel=activeTool===1&&toolStep===1&&toolFirst&&toolFirst.r===r&&toolFirst.c===c;
+
+    if(isSel || isToolSel){
+        const glowCol = isSel ? GEMS[t].color : '#6EC1FF';
+        ctx.save();
+        const cx3=px+stepX/2, cy3=py+stepY/2;
+        const glowR=stepX*.7;
+        const pulse=.5+.5*Math.sin(_now/200);
+        const g=ctx.createRadialGradient(cx3,cy3,stepX*.2,cx3,cy3,glowR);
+        g.addColorStop(0,glowCol+'00');
+        g.addColorStop(.5,glowCol+(Math.round(pulse*80+20).toString(16).padStart(2,'0')));
+        g.addColorStop(1,glowCol+'00');
+        ctx.fillStyle=g;
+        ctx.beginPath(); ctx.arc(cx3,cy3,glowR,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+
+    if(img&&img.complete&&img.naturalWidth){
+        const iw=img.naturalWidth, ih=img.naturalHeight;
+        const sc2=GEM_SIZE/Math.max(iw,ih);
+        const dw=iw*sc2, dh=ih*sc2;
+        const dx=px+ox2+(GEM_SIZE-dw)/2, dy=py+oy2+(GEM_SIZE-dh)/2;
+        // 乐小星：10秒晃一次头
+        if(isStar){
+            const cycle=_now%10000;
+            let shake=0;
+            if(cycle<400){
+                shake=Math.sin(cycle/400*Math.PI*3)*.18;
+            }
+            ctx.save();
+            ctx.translate(dx+dw/2, dy+dh/2);
+            ctx.rotate(shake);
+            ctx.drawImage(img,-dw/2,-dh/2,dw,dh);
+            ctx.restore();
+        } else {
+            ctx.drawImage(img,dx,dy,dw,dh);
+        }
+    }
+
+    // 乐小星流光火彩效果
+    if(isStar){
+        drawStarFire(px+stepX/2, py+stepY/2, GEM_SIZE/2);
+    }
+    if(isStar) ctx.globalAlpha=1;
+}
+function drawBoard(){
+    // 棋盘格交替浅色背景
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        ctx.fillStyle=(r+c)%2===0?'rgba(255,255,255,.06)':'rgba(255,255,255,.025)';
+        rr(ctx,boardX+c*stepX,boardY+r*stepY,stepX-GAP_X,stepY-GAP_Y,4);
+        ctx.fill();
+    }
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) drawGem(r,c);
+}
+
+function drawTools(){
+    for(let i=0;i<TOOLS.length;i++){
+        // 弹跳效果
+        if(panelToolBounce[i]>0) panelToolBounce[i]--;
+        const bounce=panelToolBounce[i]>0?Math.sin(panelToolBounce[i]*.5)*panelToolBounce[i]*.4:0;
+        const tx=TOOL_POS[i].x-TOOL_IW/2, ty=TOOL_POS[i].y-TOOL_IH/2+bounce;
+        const isActive=activeTool===i;
+        const isUsed=toolCounts[i]<=0;
+
+        ctx.save();
+        if(isUsed) ctx.globalAlpha=.35;
+
+        // 道具图片
+        const img=toolImgs[i];
+        const tcx=tx+TOOL_IW/2, tcy=ty+TOOL_IH/2;
+        if(img&&img.complete&&img.naturalWidth){
+            const tw=img.naturalWidth, th=img.naturalHeight;
+            const tsc=Math.min(TOOL_IW/tw, TOOL_IH/th);
+            const dw2=tw*tsc, dh2=th*tsc;
+            // 激活状态：晃动 + 放大 + 金色光晕
+            if(isActive){
+                const shake=Math.sin(_now/100)*.12;
+                const scale=1.15+.05*Math.sin(_now/250);
+                // 外圈光晕
+                const pulse=.5+.5*Math.sin(_now/200);
+                const gr=TOOL_IW*1.2;
+                const g2=ctx.createRadialGradient(tcx,tcy,TOOL_IW*.1,tcx,tcy,gr);
+                g2.addColorStop(0,'rgba(255,215,0,'+(0.4+0.35*pulse)+')');
+                g2.addColorStop(.4,'rgba(255,215,0,'+(0.2+0.2*pulse)+')');
+                g2.addColorStop(1,'rgba(255,215,0,0)');
+                ctx.fillStyle=g2;
+                ctx.beginPath(); ctx.arc(tcx,tcy,gr,0,Math.PI*2); ctx.fill();
+                // 缩放+旋转绘制
+                ctx.save();
+                ctx.translate(tcx,tcy);
+                ctx.rotate(shake);
+                ctx.scale(scale,scale);
+                ctx.drawImage(img,-dw2/2,-dh2/2,dw2,dh2);
+                ctx.restore();
+            } else {
+                ctx.drawImage(img, tx+(TOOL_IW-dw2)/2, ty+(TOOL_IH-dh2)/2, dw2, dh2);
+            }
+        }
+
+        // 数量徽章 — no shadowBlur
+        if(isUsed) ctx.globalAlpha=1;
+        {
+            const bx=tx+TOOL_IW+TOOL_POS[i].bx, by=ty+TOOL_IH+TOOL_POS[i].by;
+            ctx.fillStyle=isUsed?'rgba(255,255,255,.45)':'#fff';
+            ctx.font='bold 16px Fredoka,Arial,sans-serif';
+            ctx.textAlign='center'; ctx.textBaseline='middle';
+            ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.4)';
+            ctx.lineJoin='round';
+            ctx.strokeText('x'+toolCounts[i],bx,by);
+            ctx.fillText('x'+toolCounts[i],bx,by);
+        }
+
+        ctx.restore();
+
+
+    }
+}
+
+function drawPanel(){
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#ffd700'; ctx.font='bold 24px "Noto Sans SC",Arial,sans-serif';
+
+    const si=gemImgs[STAR_TYPE];
+    const breathe = .45 + .35 * Math.sin(_now/600);
+    // 弹跳效果衰减
+    if(panelStarBounce>0) panelStarBounce--;
+    const bounce = panelStarBounce>0 ? Math.sin(panelStarBounce*.5)*panelStarBounce*.5 : 0;
+    if(si&&si.complete&&si.naturalWidth){
+        const sw=si.naturalWidth, sh=si.naturalHeight;
+        const ssc=46/Math.max(sw,sh);
+        const dw3=sw*ssc, dh3=sh*ssc;
+        const six=82+(50-dw3)/2, siy=175+(46-dh3)/2+bounce;
+        const scx=six+dw3/2, scy=siy+dh3/2;
+        // 光晕
+        drawStarGlow(scx,scy,dw3/2);
+        // 图片 + 晃头
+        const cycle0=_now%10000;
+        let shake0=0;
+        if(cycle0<400) shake0=Math.sin(cycle0/400*Math.PI*3)*.12;
+        ctx.save();
+        ctx.translate(scx,scy);
+        ctx.rotate(shake0);
+        ctx.drawImage(si,-dw3/2,-dh3/2,dw3,dh3);
+        ctx.restore();
+        // 流光火彩
+        drawStarFire(scx,scy,dw3/2);
+    }
+    const remain = STAR_TARGET - starsCollected;
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='28px Fredoka,Arial,sans-serif';
+    ctx.lineJoin='round';
+    ctx.save();
+    // No shadowBlur — use stroke for depth
+    ctx.globalAlpha = .85 + .15 * breathe;
+    ctx.lineWidth=3; ctx.strokeStyle='#FFB6C1';
+    ctx.strokeText(remain.toString(), 150, 202);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText(remain.toString(), 150, 202);
+    ctx.restore();
+    // 数字闪光粒子 — reduce on mobile
+    const numSparkCount = _isMobile ? 2 : 5;
+    for(let i=0;i<numSparkCount;i++){
+        const angle = (_now/2000 + i*Math.PI*2/numSparkCount) % (Math.PI*2);
+        const dist = 10 + 7*Math.sin(_now/800+i*1.5);
+        const npx = 150 + Math.cos(angle)*dist;
+        const npy = 202 + Math.sin(angle)*dist;
+        ctx.globalAlpha = .3 + .5*Math.abs(Math.sin(_now/250+i*2));
+        ctx.fillStyle = '#FFFACD';
+        ctx.beginPath();
+        const ns = 2.5 + 1.5*Math.sin(_now/200+i);
+        drawSparkle(ctx,npx,npy,ns);
+        ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    // 分数弹跳效果
+    if(panelScoreBounce>0) panelScoreBounce--;
+    const scoreBounce=panelScoreBounce>0?Math.sin(panelScoreBounce*.5)*panelScoreBounce*.4:0;
+    const scoreY=110+scoreBounce;
+
+    ctx.font='bold 28px Fredoka,Arial,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.lineJoin='round';
+    // No shadowBlur — use double-stroke technique
+    ctx.lineWidth=4; ctx.strokeStyle='#FF8C00';
+    ctx.strokeText(score.toString(), 123, scoreY);
+    ctx.fillStyle='#FFF8DC';
+    ctx.fillText(score.toString(), 123, scoreY);
+
+    ctx.fillStyle='rgba(255,255,255,.6)'; ctx.font='13px "Noto Sans SC",Arial,sans-serif';
+    ctx.save();
+    ctx.font='52px Fredoka,Arial,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.lineJoin='round'; ctx.lineCap='round';
+    const str=String(stepsTaken), charGap=8;
+    const charW=ctx.measureText('0').width+charGap;
+    const totalW=str.length*charW-charGap;
+    const startX=119-totalW/2+charW/2;
+    for(let i=0;i<str.length;i++){
+        const x=startX+i*charW;
+        ctx.strokeStyle='#B478DC'; ctx.lineWidth=2;
+        ctx.strokeText(str[i],x,290);
+        ctx.fillStyle='#C8A2FF';
+        ctx.fillText(str[i],x,290);
+    }
+    ctx.restore();
+
+}
+
+// 开始界面布局常量（onDown 和 drawReady 共用）
+const READY_PANEL={w:440,h:440};
+function readyPanelRect(){
+    return {x:DW/2-READY_PANEL.w/2+10, y:DH/2-READY_PANEL.h/2-20, w:READY_PANEL.w, h:READY_PANEL.h};
+}
+function readyBtnRect(){
+    const p=readyPanelRect();
+    return {x:DW/2-120, y:p.y+p.h-68, w:240, h:52};
+}
+
+function drawReady(){
+    const now=Date.now();
+
+    // 马卡龙色系背景气泡装饰
+    const macaronColors=['#FFB6C1','#B5EAD7','#FFDAC1','#C7CEEA','#E2F0CB','#FFB7B2','#D5C4E0','#FFD1DC'];
+    const bubbleCount = _isMobile ? 8 : 16;
+    for(let i=0;i<bubbleCount;i++){
+        const bx=60+i*58+Math.sin(now/3000+i*1.2)*18;
+        const by=40+(i%4)*150+Math.cos(now/2500+i)*14;
+        const br=22+Math.sin(now/2000+i*2)*10;
+        ctx.save(); ctx.globalAlpha=.18+.08*Math.sin(now/1500+i);
+        ctx.fillStyle=macaronColors[i%macaronColors.length];
+        ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+
+    // 面板 440x440
+    const {x:panelX,y:panelY,w:panelW,h:panelH}=readyPanelRect();
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,.15)'; ctx.shadowBlur=24; ctx.shadowOffsetY=8;
+    const pbg=ctx.createLinearGradient(panelX,panelY,panelX,panelY+panelH);
+    pbg.addColorStop(0,'#FFF5F5'); pbg.addColorStop(.3,'#FFF0F5'); pbg.addColorStop(.7,'#F5F0FF'); pbg.addColorStop(1,'#F0F5FF');
+    ctx.fillStyle=pbg;
+    rr(ctx,panelX,panelY,panelW,panelH,28); ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.globalAlpha=.25; ctx.fillStyle='#FFFFFF';
+    rr(ctx,panelX+4,panelY+4,panelW-8,panelH*.25,26); ctx.fill(); ctx.restore();
+    ctx.strokeStyle='#DDB6D6'; ctx.lineWidth=4;
+    rr(ctx,panelX,panelY,panelW,panelH,28); ctx.stroke();
+
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+
+    // ── 奶油马卡龙色系 ──
+    const mTitle='#E8929E';   // 马卡龙草莓
+    const mBody='#8B7B6B';    // 焦糖奶油
+    const mReward='#6B9E88';  // 抹茶马卡龙
+    const mStroke='#F5E6D8';  // 奶油描边
+    const mFill='#FFF5E8';    // 奶油白填充
+    const headFont='bold 21px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    const bodyFont='bold 18px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    const detailFont='bold 15px Fredoka,"Noto Sans SC",Arial,sans-serif';
+
+    // ── 标题（logo风格+特效） ──
+    const titleFloat=Math.sin(now/400)*4;
+    const titleGlow=.6+.4*Math.sin(now/350);
+    const titleY=panelY+48+titleFloat;
+    ctx.save();
+    ctx.font='bold 46px Fredoka,Arial,sans-serif'; ctx.lineJoin='round';
+    // 外层描边+呼吸发光
+    ctx.shadowColor=mTitle; ctx.shadowBlur=12+8*titleGlow;
+    ctx.lineWidth=8; ctx.strokeStyle='#C06878';
+    ctx.strokeText('体彩消消乐',DW/2,titleY);
+    // 内层描边
+    ctx.shadowBlur=0;
+    ctx.lineWidth=3; ctx.strokeStyle='#F5C6D0';
+    ctx.strokeText('体彩消消乐',DW/2,titleY);
+    // 填充
+    const titleGrad=ctx.createLinearGradient(DW/2-100,titleY-22,DW/2+100,titleY+22);
+    titleGrad.addColorStop(0,'#FFF0E0');
+    titleGrad.addColorStop(.3,'#FFFFFF');
+    titleGrad.addColorStop(.7,'#FFFFFF');
+    titleGrad.addColorStop(1,'#FFF0E0');
+    ctx.fillStyle=titleGrad;
+    ctx.fillText('体彩消消乐',DW/2,titleY);
+    ctx.restore();
+    // 标题两侧小星星
+    const titleStarCount = _isMobile ? 3 : 6;
+    for(let i=0;i<titleStarCount;i++){
+        const angle=(now/600+i*Math.PI/3)%(Math.PI*2);
+        const dist=85+10*Math.sin(now/350+i*2);
+        const sx=DW/2+Math.cos(angle)*dist;
+        const sy=titleY+Math.sin(angle)*dist*.35;
+        ctx.globalAlpha=.2+.55*Math.abs(Math.sin(now/200+i*1.8));
+        ctx.fillStyle='#FFF0E0';
+        ctx.beginPath();
+        drawSparkle(ctx,sx,sy,2.5+1.5*Math.sin(now/180+i));
+        ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    // ── 游戏玩法 小标题 ──
+    ctx.save();
+    ctx.font=headFont; ctx.lineJoin='round';
+    ctx.lineWidth=4; ctx.strokeStyle=mStroke;
+    ctx.strokeText('游戏玩法',DW/2,panelY+96);
+    ctx.fillStyle=mTitle;
+    ctx.fillText('游戏玩法',DW/2,panelY+96);
+    ctx.restore();
+
+    // 玩法内容
+    const si2=gemImgs[STAR_TYPE];
+    const breathe=.45+.35*Math.sin(now/600);
+    const rules=[
+        {left:'收集', right:'落到棋盘最底行即可收集', hasStar:true},
+        {left:'交换相邻棋子，三个相同即可消除'},
+        {left:'消除越多得分越高，还能获得道具奖励'},
+    ];
+    ctx.save(); ctx.font=bodyFont; ctx.lineJoin='round';
+    let rulesY=panelY+120;
+    for(let ri=0;ri<rules.length;ri++){
+        const r=rules[ri];
+        if(r.hasStar){
+            const clW=ctx.measureText(r.left).width;
+            const crW=ctx.measureText(r.right).width;
+            let sIconW=0, sIconH=0;
+            if(si2&&si2.complete&&si2.naturalWidth){
+                const sw=si2.naturalWidth, sh=si2.naturalHeight;
+                const ssc=28/Math.max(sw,sh);
+                sIconW=sw*ssc; sIconH=sh*ssc;
+            }
+            const tw=clW+sIconW+crW+8;
+            const sx=DW/2-tw/2;
+            ctx.lineWidth=4; ctx.strokeStyle=mStroke;
+            ctx.strokeText(r.left,sx+clW/2,rulesY);
+            ctx.fillStyle=mTitle;
+            ctx.fillText(r.left,sx+clW/2,rulesY);
+            const ix=sx+clW+4;
+            if(si2&&si2.complete&&si2.naturalWidth){
+                const s2cx=ix+sIconW/2, s2cy=rulesY;
+                drawStarGlow(s2cx,s2cy,sIconW/2);
+                ctx.drawImage(si2,ix,rulesY-sIconH/2,sIconW,sIconH);
+                drawStarFire(s2cx,s2cy,sIconW/2);
+            }
+            const rx=ix+sIconW+4+crW/2;
+            ctx.strokeText(r.right,rx,rulesY);
+            ctx.fillStyle=mBody;
+            ctx.fillText(r.right,rx,rulesY);
+        } else {
+            ctx.lineWidth=4; ctx.strokeStyle=mStroke;
+            ctx.strokeText(r.left,DW/2,rulesY);
+            ctx.fillStyle=mBody;
+            ctx.fillText(r.left,DW/2,rulesY);
+        }
+        rulesY+=26;
+    }
+    ctx.restore();
+
+    // 分隔线
+    ctx.save(); ctx.globalAlpha=.2; ctx.strokeStyle=mStroke; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(panelX+30,rulesY+2); ctx.lineTo(panelX+panelW-30,rulesY+2); ctx.stroke();
+    ctx.restore();
+
+    // ── 道具奖励 小标题 ──
+    const rewardHeadY=rulesY+16;
+    ctx.save();
+    ctx.font=headFont; ctx.lineJoin='round';
+    ctx.lineWidth=4; ctx.strokeStyle=mStroke;
+    ctx.strokeText('道具奖励',DW/2,rewardHeadY);
+    ctx.fillStyle=mTitle;
+    ctx.fillText('道具奖励',DW/2,rewardHeadY);
+    ctx.restore();
+
+    // 奖励内容（道具图标+光效）
+    const rewardDefs=[
+        { label:'4消', tools:[0] },
+        { label:'5消', tools:[1,0] },
+        { label:'L消/T消', tools:[2,0] },
+        { label:'十字4消', tools:[2,1,0] },
+        { label:'十字5消', tools:[2,1,0,3] },
+    ];
+    const mReward2='#C9926E'; // 焦糖马卡龙（暖棕，替代绿色）
+    const tIconSize=26;
+    const toolGap=6; // 图标间距
+    const labelGap=10; // 文字与图标间距
+    ctx.save(); ctx.textBaseline='middle'; ctx.lineJoin='round';
+    const rewardY0=rewardHeadY+26;
+    for(let i=0;i<rewardDefs.length;i++){
+        const ry=rewardY0+i*28;
+        const rd=rewardDefs[i];
+        const breathe2=.45+.35*Math.sin(now/600+i*1.2);
+        // 先测量文字宽度
+        ctx.font=detailFont; ctx.textAlign='left';
+        const labelW=ctx.measureText(rd.label).width;
+        const totalW=labelW+labelGap+(rd.tools.length*(tIconSize+toolGap)-toolGap);
+        let cx=DW/2-totalW/2;
+        // 画文字标签
+        ctx.font=detailFont; ctx.textAlign='left';
+        ctx.lineWidth=3; ctx.strokeStyle=mStroke;
+        ctx.strokeText(rd.label,cx,ry);
+        ctx.fillStyle=mReward2;
+        ctx.fillText(rd.label,cx,ry);
+        cx+=labelW+labelGap;
+        // 画道具图标+光效
+        for(let ti=0;ti<rd.tools.length;ti++){
+            const tidx=rd.tools[ti];
+            const timg=toolImgs[tidx];
+            if(timg&&timg.complete&&timg.naturalWidth){
+                const sw=timg.naturalWidth, sh=timg.naturalHeight;
+                const tsc=tIconSize/Math.max(sw,sh);
+                const iw=sw*tsc, ih=sh*tsc;
+                ctx.save();
+                ctx.globalAlpha=.85+.15*breathe2;
+                ctx.drawImage(timg,cx+(tIconSize-iw)/2,ry-ih/2,iw,ih);
+                ctx.restore();
+                // 小闪光 — skip on mobile for perf
+                if(!_isMobile){
+                for(let j=0;j<2;j++){
+                    const a2=(now/800+j*Math.PI+ti*1.5+i*2)%(Math.PI*2);
+                    const d2=8+3*Math.sin(now/400+j);
+                    ctx.globalAlpha=(.25+.6*Math.abs(Math.sin(now/280+j*2+ti)))*(.85+.15*breathe2);
+                    ctx.fillStyle='#FFF8DC'; ctx.beginPath();
+                    drawSparkle(ctx,cx+tIconSize/2+Math.cos(a2)*d2,ry+Math.sin(a2)*d2,1.5+Math.sin(now/220+j+ti));
+                    ctx.fill();
+                }
+                ctx.globalAlpha=1;
+                } // end if(!_isMobile)
+            } else {
+                ctx.textAlign='left';
+                ctx.fillStyle=mReward2;
+                ctx.fillText(TOOLS[tidx].name,cx,ry);
+            }
+            cx+=tIconSize+toolGap;
+        }
+    }
+    ctx.textAlign='center';
+    ctx.restore();
+
+    // 开始按钮
+    const lastRewardY=rewardY0+4*28;
+    const btnW=220, btnH=48;
+    const btnX=DW/2-btnW/2, btnY=lastRewardY+18;
+    readyBtnY=btnY;
+    const btnScale=1+.03*Math.sin(now/500);
+    ctx.save();
+    ctx.translate(DW/2,btnY+btnH/2);
+    ctx.scale(btnScale,btnScale);
+    ctx.translate(-DW/2,-(btnY+btnH/2));
+    const btnG=ctx.createLinearGradient(btnX,btnY,btnX,btnY+btnH);
+    btnG.addColorStop(0,'#FFB6C1'); btnG.addColorStop(1,'#FF8FAB');
+    ctx.shadowColor='rgba(255,107,129,.4)'; ctx.shadowBlur=12;
+    ctx.fillStyle=btnG;
+    rr(ctx,btnX,btnY,btnW,btnH,26); ctx.fill();
+    ctx.shadowBlur=0;
+    ctx.save(); ctx.globalAlpha=.22; ctx.fillStyle='#fff';
+    rr(ctx,btnX+4,btnY+2,btnW-8,btnH/2-2,22); ctx.fill(); ctx.restore();
+    ctx.font='bold 24px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    ctx.lineJoin='round'; ctx.lineWidth=5; ctx.strokeStyle='#C46080';
+    ctx.strokeText('开始游戏',DW/2,btnY+btnH/2+1);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText('开始游戏',DW/2,btnY+btnH/2+1);
+    ctx.restore();
+}
+
+// 道具飞行动画 (time-based)
+function drawToolFlights(dt){
+    for(let i=toolFlights.length-1;i>=0;i--){
+        const f=toolFlights[i];
+        f.t+=dt;
+        const p=Math.min(f.t/FLIGHT_DUR,1);
+        const ep=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+        const tgt=TOOL_POS[f.toolIdx];
+        const fx=f.sx+(tgt.x-f.sx)*ep, fy=f.sy+(tgt.y-f.sy)*ep;
+        const tc=['#FF9900','#9966CC','#33CC66','#3399FF'][f.toolIdx];
+        const img=toolImgs[f.toolIdx];
+        // 拖尾粒子 — reduce on mobile
+        if(particles.length<PARTICLE_CAP){
+            const trailCount = _isMobile ? 1 : 2;
+            for(let j=0;j<trailCount;j++){
+                const ta=Math.random()*Math.PI*2;
+                particles.push({x:fx+Math.random()*8-4,y:fy+Math.random()*8-4,
+                    vx:Math.cos(ta)*.3,vy:Math.sin(ta)*.3,
+                    life:.8,dec:.02,sz:2+Math.random()*3,col:j%2?tc:'#FFFACD'});
+            }
+        }
+        // 道具图片+光晕 — no shadowBlur
+        ctx.save();
+        const flySize=22;
+        // 外层光晕
+        const glow=ctx.createRadialGradient(fx,fy,0,fx,fy,flySize*1.2);
+        glow.addColorStop(0,tc+'55');
+        glow.addColorStop(.6,tc+'22');
+        glow.addColorStop(1,tc+'00');
+        ctx.fillStyle=glow;
+        ctx.beginPath(); ctx.arc(fx,fy,flySize*1.2,0,Math.PI*2); ctx.fill();
+        // 道具图片等比缩小
+        if(img&&img.complete&&img.naturalWidth){
+            const iw=img.naturalWidth,ih=img.naturalHeight;
+            const isc=flySize/Math.max(iw,ih);
+            const dw=iw*isc, dh=ih*isc;
+            ctx.drawImage(img,fx-dw/2,fy-dh/2,dw,dh);
+        }
+        ctx.restore();
+        if(p>=1){
+            toolFlights.splice(i,1);
+            if(toolCounts[f.toolIdx]<MAX_TOOLS) toolCounts[f.toolIdx]++;
+            // 到达爆散 — reduce particles
+            const burstCount = _isMobile ? 6 : 10;
+            for(let j=0;j<burstCount;j++){
+                const a=Math.random()*Math.PI*2, sp=1.5+Math.random()*2;
+                particles.push({x:tgt.x,y:tgt.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+                    life:1,dec:.025,sz:3+Math.random()*3,col:tc});
+            }
+            panelToolBounce[f.toolIdx]=15;
+        }
+    }
+}
+
+function drawResult(){
+    const now=Date.now();
+    const isWin=state==='win';
+    const cx=DW/2;
+    // 半透明遮罩（柔和粉紫）
+    const maskG=ctx.createRadialGradient(cx,DH/2,0,cx,DH/2,DH*.7);
+    maskG.addColorStop(0,'rgba(255,200,220,.25)');
+    maskG.addColorStop(1,'rgba(80,40,80,.45)');
+    ctx.fillStyle=maskG; ctx.fillRect(0,0,DW,DH);
+
+    // 糖果色浮动气泡
+    const candy=['#FF9EC6','#A8E6CF','#FFD3B6','#D4A5FF','#FFEAA7','#74B9FF','#FD79A8','#81ECEC','#F8C8DC','#B5EAD7'];
+    const candyCount = _isMobile ? 8 : 16;
+    for(let i=0;i<candyCount;i++){
+        const bx=60+i*58+Math.sin(now/2800+i*1.1)*20;
+        const by=40+(i%4)*145+Math.cos(now/2200+i*.9)*16;
+        const br=10+Math.sin(now/1800+i*2)*8;
+        ctx.save(); ctx.globalAlpha=.15+.1*Math.sin(now/1200+i);
+        ctx.fillStyle=candy[i%candy.length];
+        ctx.beginPath(); ctx.arc(bx,by,br,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+    }
+
+    // ── 面板 ──
+    const pw=390, ph=380;
+    const px=cx-pw/2, py=DH/2-ph/2;
+    // 外层糖果边框光晕 — reduce shadowBlur on mobile
+    ctx.save();
+    ctx.shadowColor='rgba(255,150,180,.5)';
+    ctx.shadowBlur=_isMobile?8:40; ctx.shadowOffsetY=0;
+    const outerG=ctx.createLinearGradient(px-6,py-6,px-6,py+ph+12);
+    outerG.addColorStop(0,'#FFB6C1');
+    outerG.addColorStop(.5,'#FFC8DD');
+    outerG.addColorStop(1,'#F0C0E8');
+    ctx.fillStyle=outerG;
+    rr(ctx,px-6,py-6,pw+12,ph+12,34); ctx.fill();
+    ctx.restore();
+    // 内面板 — reduce shadowBlur on mobile
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,.08)'; ctx.shadowBlur=_isMobile?4:20; ctx.shadowOffsetY=6;
+    const pbg=ctx.createLinearGradient(px,py,px,py+ph);
+    pbg.addColorStop(0,'#FFFFFF'); pbg.addColorStop(.3,'#FFF5F8'); pbg.addColorStop(.6,'#FFF0F5'); pbg.addColorStop(1,'#FFF8FC');
+    ctx.fillStyle=pbg;
+    rr(ctx,px,py,pw,ph,28); ctx.fill();
+    ctx.restore();
+    // 顶部奶油高光
+    ctx.save(); ctx.globalAlpha=.4;
+    const hlG=ctx.createLinearGradient(px,py,px,py+ph*.15);
+    hlG.addColorStop(0,'#FFFFFF'); hlG.addColorStop(1,'rgba(255,255,255,0)');
+    ctx.fillStyle=hlG;
+    rr(ctx,px+3,py+3,pw-6,ph*.15,26); ctx.fill(); ctx.restore();
+    ctx.strokeStyle='#DDB6D6'; ctx.lineWidth=4;
+    rr(ctx,px,py,pw,ph,28); ctx.stroke();
+
+    // 面板四角糖果圆点
+    const cornerR=7;
+    [[px+16,py+16],[px+pw-16,py+16],[px+16,py+ph-16],[px+pw-16,py+ph-16]].forEach((p2,i)=>{
+        const pulse=.6+.4*Math.sin(now/600+i*1.5);
+        ctx.save(); ctx.globalAlpha=.5*pulse;
+        ctx.fillStyle=candy[i*2%candy.length];
+        ctx.beginPath(); ctx.arc(p2[0],p2[1],cornerR*pulse,0,Math.PI*2); ctx.fill();
+        ctx.restore();
+    });
+
+    // 面板顶部弧形糖果装饰带
+    ctx.save(); ctx.globalAlpha=.12;
+    for(let i=0;i<8;i++){
+        const dx2=px+30+i*(pw-60)/7;
+        const dy2=py+8+Math.sin(now/1500+i*.8)*3;
+        ctx.fillStyle=candy[(i+3)%candy.length];
+        ctx.beginPath(); ctx.arc(dx2,dy2,4+Math.sin(now/900+i)*2,0,Math.PI*2); ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    const si3=gemImgs[STAR_TYPE];
+    const breathe=.45+.35*Math.sin(now/600);
+
+    // ── 标题 ──
+    const titleBounce=Math.sin(now/350)*4;
+    const titleGlow=.6+.4*Math.sin(now/300);
+    const titleY=py+52+titleBounce;
+    const titleText=isWin?'收集成功!':'游戏结束';
+    ctx.save();
+    ctx.font='bold 44px Fredoka,Arial,sans-serif'; ctx.lineJoin='round';
+    // 外描边+光晕
+    ctx.shadowColor='#FFB6C1'; ctx.shadowBlur=16+10*titleGlow;
+    ctx.lineWidth=9; ctx.strokeStyle='#D06080';
+    ctx.strokeText(titleText,cx,titleY);
+    ctx.shadowBlur=0;
+    // 内描边
+    ctx.lineWidth=3; ctx.strokeStyle='#FFD0E0';
+    ctx.strokeText(titleText,cx,titleY);
+    // 渐变填充
+    const tGrad=ctx.createLinearGradient(cx-120,titleY-22,cx+120,titleY+22);
+    tGrad.addColorStop(0,'#FFE8F0'); tGrad.addColorStop(.5,'#FFFFFF'); tGrad.addColorStop(1,'#FFE8F0');
+    ctx.fillStyle=tGrad;
+    ctx.fillText(titleText,cx,titleY);
+    ctx.restore();
+    // 标题两侧小星星
+    const resultStarCount = _isMobile ? 4 : 8;
+    for(let i=0;i<resultStarCount;i++){
+        const a=(now/550+i*Math.PI/4)%(Math.PI*2);
+        const d=88+6*Math.sin(now/300+i*2);
+        const sx=cx+Math.cos(a)*d, sy=titleY+Math.sin(a)*d*.35;
+        ctx.globalAlpha=.3+.5*Math.abs(Math.sin(now/180+i*1.6));
+        ctx.fillStyle=candy[i%candy.length]; ctx.beginPath();
+        drawSparkle(ctx,sx,sy,2.5+Math.sin(now/200+i));
+        ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    // ── 乐小星 + 数量 并排 ──
+    const rowY=py+118;
+    const iconSz=54;
+    // 并排布局：图标 + 间距 + 文字
+    const collectText=isWin?('x '+starsCollected):('x '+starsCollected+' / '+STAR_TARGET);
+    ctx.save(); ctx.font='bold 30px Fredoka,Arial,sans-serif';
+    const txtW=ctx.measureText(collectText).width;
+    ctx.restore();
+    const rowW=iconSz+12+txtW;
+    const rowLeft=cx-rowW/2;
+
+    // 并排底座胶囊
+    const pillPad=14;
+    ctx.save();
+    ctx.shadowColor='rgba(255,215,0,.2)'; ctx.shadowBlur=12;
+    const pillG=ctx.createLinearGradient(rowLeft-pillPad,rowY,rowLeft+rowW+pillPad,rowY);
+    pillG.addColorStop(0,'#FFFCF0'); pillG.addColorStop(.5,'#FFF8E8'); pillG.addColorStop(1,'#FFFCF0');
+    ctx.fillStyle=pillG;
+    rr(ctx,rowLeft-pillPad,rowY-iconSz/2-8,rowW+pillPad*2,iconSz+16,iconSz/2+8); ctx.fill();
+    ctx.restore();
+    ctx.save();
+    ctx.strokeStyle='#FFD0E0'; ctx.lineWidth=2;
+    rr(ctx,rowLeft-pillPad,rowY-iconSz/2-8,rowW+pillPad*2,iconSz+16,iconSz/2+8); ctx.stroke();
+    ctx.restore();
+
+    // 乐小星图标 — 光晕+晃头+流光火彩
+    if(si3&&si3.complete&&si3.naturalWidth){
+        const sw=si3.naturalWidth, sh=si3.naturalHeight;
+        const ssc=iconSz/Math.max(sw,sh);
+        const dw4=sw*ssc, dh4=sh*ssc;
+        const ix=rowLeft, iy=rowY-dh4/2;
+        const icx=ix+dw4/2, icy=rowY;
+        // 光晕
+        drawStarGlow(icx,icy,dw4/2);
+        // 图片 + 晃头
+        const cycle3=now%10000;
+        let shake3=0;
+        if(cycle3<400) shake3=Math.sin(cycle3/400*Math.PI*3)*.12;
+        ctx.save();
+        ctx.translate(icx,icy);
+        ctx.rotate(shake3);
+        ctx.drawImage(si3,-dw4/2,-dh4/2,dw4,dh4);
+        ctx.restore();
+        // 流光火彩
+        drawStarFire(icx,icy,dw4/2);
+    }
+    // 收集数文字（并排）— no shadowBlur
+    ctx.save(); ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.font='bold 30px Fredoka,Arial,sans-serif'; ctx.lineJoin='round';
+    ctx.lineWidth=4; ctx.strokeStyle='#FFB6C1';
+    ctx.strokeText(collectText,rowLeft+iconSz+12,rowY);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText(collectText,rowLeft+iconSz+12,rowY);
+    ctx.restore();
+
+    // ── 分隔虚线 ──
+    ctx.save(); ctx.globalAlpha=.18; ctx.strokeStyle='#FFB6C1'; ctx.lineWidth=1.5;
+    ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(px+35,rowY+iconSz/2+16); ctx.lineTo(px+pw-35,rowY+iconSz/2+16); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // ── 统计卡片 ──
+    const cardW=pw-56, cardH=44, cardR=cardH/2;
+    const cardX2=px+28;
+    const cardsTop=rowY+iconSz/2+32;
+
+    // 得分卡片
+    const scoreCardY=cardsTop;
+    ctx.save();
+    ctx.shadowColor='rgba(255,160,80,.12)'; ctx.shadowBlur=10;
+    const scG=ctx.createLinearGradient(cardX2,scoreCardY,cardX2+cardW,scoreCardY);
+    scG.addColorStop(0,'#FFF5EC'); scG.addColorStop(1,'#FFFCF5');
+    ctx.fillStyle=scG;
+    rr(ctx,cardX2,scoreCardY,cardW,cardH,cardR); ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.strokeStyle='#FFD8B0'; ctx.lineWidth=1.5;
+    rr(ctx,cardX2,scoreCardY,cardW,cardH,cardR); ctx.stroke(); ctx.restore();
+    // 左侧小圆点装饰
+    ctx.save(); ctx.globalAlpha=.5; ctx.fillStyle='#FFDAC1';
+    ctx.beginPath(); ctx.arc(cardX2+16,scoreCardY+cardH/2,4,0,Math.PI*2); ctx.fill(); ctx.restore();
+    // 文字 — no shadowBlur
+    ctx.save(); ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.font='bold 18px Fredoka,"Noto Sans SC",Arial,sans-serif'; ctx.lineJoin='round';
+    ctx.fillStyle='#C08850';
+    ctx.fillText('得分',cardX2+28,scoreCardY+cardH/2);
+    ctx.textAlign='right';
+    ctx.lineWidth=4; ctx.strokeStyle='#FF8C00';
+    ctx.font='bold 28px Fredoka,Arial,sans-serif';
+    ctx.strokeText(score.toString(),cardX2+cardW-18,scoreCardY+cardH/2);
+    ctx.fillStyle='#FFF8DC';
+    ctx.fillText(score.toString(),cardX2+cardW-18,scoreCardY+cardH/2);
+    ctx.restore();
+
+    // 步数卡片
+    const stepCardY=scoreCardY+cardH+12;
+    ctx.save();
+    ctx.shadowColor='rgba(255,140,160,.12)'; ctx.shadowBlur=10;
+    const stG=ctx.createLinearGradient(cardX2,stepCardY,cardX2+cardW,stepCardY);
+    stG.addColorStop(0,'#FFF0F5'); stG.addColorStop(1,'#FFFAFC');
+    ctx.fillStyle=stG;
+    rr(ctx,cardX2,stepCardY,cardW,cardH,cardR); ctx.fill();
+    ctx.restore();
+    ctx.save(); ctx.strokeStyle='#FFD0DD'; ctx.lineWidth=1.5;
+    rr(ctx,cardX2,stepCardY,cardW,cardH,cardR); ctx.stroke(); ctx.restore();
+    // 左侧小圆点装饰
+    ctx.save(); ctx.globalAlpha=.5; ctx.fillStyle='#FFB6C1';
+    ctx.beginPath(); ctx.arc(cardX2+16,stepCardY+cardH/2,4,0,Math.PI*2); ctx.fill(); ctx.restore();
+    // 文字
+    ctx.save(); ctx.textAlign='left'; ctx.textBaseline='middle';
+    ctx.font='bold 18px Fredoka,"Noto Sans SC",Arial,sans-serif'; ctx.lineJoin='round';
+    ctx.fillStyle='#D07090';
+    ctx.fillText('步数',cardX2+28,stepCardY+cardH/2);
+    ctx.textAlign='right';
+    ctx.font='bold 28px Fredoka,Arial,sans-serif';
+    ctx.lineWidth=2; ctx.strokeStyle='#E0708A';
+    ctx.strokeText(stepsTaken.toString(),cardX2+cardW-18,stepCardY+cardH/2);
+    ctx.fillStyle='#FFB0C8';
+    ctx.fillText(stepsTaken.toString(),cardX2+cardW-18,stepCardY+cardH/2);
+    ctx.restore();
+
+    // ── 按钮并排 ──
+    const btnGap=16;
+    const btnAreaW=pw-60;
+    const singleBtnW=(btnAreaW-btnGap)/2;
+    const btnH=46;
+    const btnAreaX=px+30;
+    const btnY2=py+ph-70;
+    const btnBounce=1+.03*Math.sin(now/450);
+    const btn1X=btnAreaX;
+    const btn2X=btnAreaX+singleBtnW+btnGap;
+    // 再来一局 按钮
+    ctx.save();
+    const b1cx=btn1X+singleBtnW/2;
+    ctx.translate(b1cx,btnY2+btnH/2);
+    ctx.scale(btnBounce,btnBounce);
+    ctx.translate(-b1cx,-(btnY2+btnH/2));
+    ctx.shadowColor='rgba(255,100,140,.3)'; ctx.shadowBlur=14; ctx.shadowOffsetY=4;
+    const btnG=ctx.createLinearGradient(btn1X,btnY2,btn1X,btnY2+btnH);
+    btnG.addColorStop(0,'#FF9EC6'); btnG.addColorStop(.4,'#FF8AB5'); btnG.addColorStop(1,'#FF6FA0');
+    ctx.fillStyle=btnG;
+    rr(ctx,btn1X,btnY2,singleBtnW,btnH,btnH/2); ctx.fill();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.save(); ctx.globalAlpha=.3; ctx.fillStyle='#fff';
+    rr(ctx,btn1X+6,btnY2+3,singleBtnW-12,btnH*.36,btnH/2); ctx.fill(); ctx.restore();
+    ctx.font='bold 20px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.lineJoin='round'; ctx.lineWidth=4; ctx.strokeStyle='#C04070';
+    ctx.strokeText('再来一局',b1cx,btnY2+btnH/2+1);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText('再来一局',b1cx,btnY2+btnH/2+1);
+    ctx.restore();
+    // 返回主页 按钮
+    ctx.save();
+    const b2cx=btn2X+singleBtnW/2;
+    ctx.translate(b2cx,btnY2+btnH/2);
+    ctx.scale(btnBounce,btnBounce);
+    ctx.translate(-b2cx,-(btnY2+btnH/2));
+    ctx.shadowColor='rgba(160,120,220,.15)'; ctx.shadowBlur=8; ctx.shadowOffsetY=3;
+    ctx.fillStyle='#FFFFFF';
+    rr(ctx,btn2X,btnY2,singleBtnW,btnH,btnH/2); ctx.fill();
+    ctx.strokeStyle='#C8A2E8'; ctx.lineWidth=2;
+    rr(ctx,btn2X,btnY2,singleBtnW,btnH,btnH/2); ctx.stroke();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.font='bold 20px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle='#7B5EA7';
+    ctx.fillText('返回主页',b2cx,btnY2+btnH/2);
+    ctx.restore();
+
+    // ── 胜利纸屑+爱心 ──
+    if(isWin){
+        const confettiCount = _isMobile ? 10 : 20;
+        for(let i=0;i<confettiCount;i++){
+            const cx2=px+15+((i*61+now/14)%(pw-30));
+            const cy2=py+10+((i*47+now/(7+i%4))%(ph-20));
+            const rot=(now/380+i*1.4)%(Math.PI*2);
+            ctx.save();
+            ctx.translate(cx2,cy2); ctx.rotate(rot);
+            ctx.globalAlpha=.35+.25*Math.sin(now/400+i);
+            ctx.fillStyle=candy[i%candy.length];
+            if(i%4===0){
+                // 爱心
+                const hs=3+Math.sin(now/300+i)*1.5;
+                ctx.beginPath();
+                ctx.moveTo(0,-hs);
+                ctx.bezierCurveTo(hs,-hs*2,hs*2,0,0,hs);
+                ctx.bezierCurveTo(-hs*2,0,-hs,-hs*2,0,-hs);
+                ctx.fill();
+            } else if(i%4===2){
+                // 小星星
+                const ss=3+Math.sin(now/350+i)*1;
+                drawSparkle(ctx,0,0,ss); ctx.fill();
+            } else {
+                // 小矩形
+                const sz=3+Math.sin(now/280+i*2)*1.5;
+                ctx.fillRect(-sz/2,-sz/4,sz,sz/2);
+            }
+            ctx.restore();
+        }
+    }
+}
+
+function drawPauseBtn(){
+    if(state!=='playing'&&state!=='animating'&&!paused) return;
+    const x=PAUSE_BTN_X, y=PAUSE_BTN_Y, r=PAUSE_BTN_R;
+    ctx.save();
+    // 圆形底座（淡紫色系）— no shadowBlur
+    ctx.fillStyle=paused?'#C8A2E8':'#FFFFFF';
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    // 淡紫边框
+    ctx.strokeStyle='#B088D0'; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+    // 暂停图标（两条竖线）或播放三角
+    ctx.fillStyle=paused?'#fff':'#7B5EA7';
+    if(paused){
+        // 播放三角
+        ctx.beginPath();
+        ctx.moveTo(x-4,y-7); ctx.lineTo(x-4,y+7); ctx.lineTo(x+7,y);
+        ctx.closePath(); ctx.fill();
+    } else {
+        // 暂停双竖线
+        rr(ctx,x-6,y-7,4,14,2); ctx.fill();
+        rr(ctx,x+2,y-7,4,14,2); ctx.fill();
+    }
+    ctx.restore();
+}
+
+function drawPause(){
+    const now=Date.now();
+    const cx=DW/2;
+    // 遮罩
+    ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(0,0,DW,DH);
+    // 面板
+    const pw=320, ph=280;
+    const px=cx-pw/2, py=DH/2-ph/2;
+    ctx.save();
+    ctx.shadowColor='rgba(160,120,220,.4)'; ctx.shadowBlur=_isMobile?6:30;
+    const outerG=ctx.createLinearGradient(px-4,py-4,px-4,py+ph+8);
+    outerG.addColorStop(0,'#C8A2E8'); outerG.addColorStop(1,'#DBC4F0');
+    ctx.fillStyle=outerG;
+    rr(ctx,px-4,py-4,pw+8,ph+8,30); ctx.fill();
+    ctx.restore();
+    // 内面板
+    ctx.save();
+    ctx.shadowColor='rgba(0,0,0,.06)'; ctx.shadowBlur=12;
+    const pbg=ctx.createLinearGradient(px,py,px,py+ph);
+    pbg.addColorStop(0,'#FFFFFF'); pbg.addColorStop(1,'#F8F0FF');
+    ctx.fillStyle=pbg;
+    rr(ctx,px,py,pw,ph,26); ctx.fill();
+    ctx.restore();
+    // 标题
+    ctx.save(); ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.font='bold 36px Fredoka,"Noto Sans SC",Arial,sans-serif'; ctx.lineJoin='round';
+    ctx.shadowColor='#C8A2E8'; ctx.shadowBlur=12;
+    ctx.lineWidth=6; ctx.strokeStyle='#7B5EA7';
+    ctx.strokeText('游戏暂停',cx,py+55);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText('游戏暂停',cx,py+55);
+    ctx.shadowBlur=0;
+    // 提示文字
+    ctx.font='16px "Noto Sans SC",Arial,sans-serif';
+    ctx.fillStyle='#9878B8';
+    ctx.fillText('休息一下，随时继续~',cx,py+98);
+    ctx.restore();
+    // 继续游戏按钮
+    const btnW=220, btnH=48;
+    const btnX=cx-btnW/2, btnY=py+125;
+    const btnBounce=1+.03*Math.sin(now/450);
+    ctx.save();
+    ctx.translate(cx,btnY+btnH/2);
+    ctx.scale(btnBounce,btnBounce);
+    ctx.translate(-cx,-(btnY+btnH/2));
+    ctx.shadowColor='rgba(160,120,220,.3)'; ctx.shadowBlur=14; ctx.shadowOffsetY=4;
+    const btnG=ctx.createLinearGradient(btnX,btnY,btnX,btnY+btnH);
+    btnG.addColorStop(0,'#C8A2E8'); btnG.addColorStop(1,'#A67BD6');
+    ctx.fillStyle=btnG;
+    rr(ctx,btnX,btnY,btnW,btnH,btnH/2); ctx.fill();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.save(); ctx.globalAlpha=.3; ctx.fillStyle='#fff';
+    rr(ctx,btnX+6,btnY+3,btnW-12,btnH*.36,btnH/2); ctx.fill(); ctx.restore();
+    ctx.font='bold 22px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
+    ctx.lineWidth=4; ctx.strokeStyle='#6B4D8A';
+    ctx.strokeText('继续游戏',cx,btnY+btnH/2);
+    ctx.fillStyle='#FFFFFF';
+    ctx.fillText('继续游戏',cx,btnY+btnH/2);
+    ctx.restore();
+    // 返回主页按钮
+    const btn2W=220, btn2H=48;
+    const btn2X=cx-btn2W/2, btn2Y=btnY+btnH+16;
+    ctx.save();
+    ctx.translate(cx,btn2Y+btn2H/2);
+    ctx.scale(btnBounce,btnBounce);
+    ctx.translate(-cx,-(btn2Y+btn2H/2));
+    ctx.shadowColor='rgba(160,120,220,.2)'; ctx.shadowBlur=10; ctx.shadowOffsetY=3;
+    ctx.fillStyle='#FFFFFF';
+    rr(ctx,btn2X,btn2Y,btn2W,btn2H,btn2H/2); ctx.fill();
+    ctx.strokeStyle='#B088D0'; ctx.lineWidth=2;
+    rr(ctx,btn2X,btn2Y,btn2W,btn2H,btn2H/2); ctx.stroke();
+    ctx.shadowBlur=0; ctx.shadowOffsetY=0;
+    ctx.font='bold 20px Fredoka,"Noto Sans SC",Arial,sans-serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
+    ctx.fillStyle='#7B5EA7';
+    ctx.fillText('返回主页',cx,btn2Y+btn2H/2);
+    ctx.restore();
+}
+
+function drawSoundBtn(){
+    const x=SND_BTN_X, y=SND_BTN_Y, r=SND_BTN_R;
+    const img=soundOn?sndOnImg:sndOffImg;
+    if(!img||!img.complete||!img.naturalWidth) return;
+    ctx.save();
+    ctx.drawImage(img,x-r,y-r,r*2,r*2);
+    ctx.restore();
+}
+
+function drawParticles(dt){
+    for(let i=particles.length-1;i>=0;i--){
+        const p=particles[i];
+        p.x+=p.vx*(dt/16); p.y+=p.vy*(dt/16); p.vy+=.06*(dt/16); p.life-=p.dec*(dt/16);
+        if(p.life<=0){particles.splice(i,1);continue;}
+        ctx.globalAlpha=p.life; ctx.fillStyle=p.col;
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.sz*p.life,0,Math.PI*2); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    // 星光飞行（time-based）
+    const tx=105, ty=198; // 信息栏乐小星目标位置
+    for(let i=starFlights.length-1;i>=0;i--){
+        const f=starFlights[i];
+        f.t+=dt;
+        const p=Math.min(f.t/FLIGHT_DUR, 1);
+        // 缓动曲线：先慢后快再慢
+        const ep = p<0.5 ? 4*p*p*p : 1-Math.pow(-2*p+2,3)/2;
+        const fx=f.sx+(tx-f.sx)*ep, fy=f.sy+(ty-f.sy)*ep;
+        // 拖尾粒子 — reduce on mobile
+        if(particles.length<PARTICLE_CAP){
+            const trailCount = _isMobile ? 1 : 2;
+            for(let j=0;j<trailCount;j++){
+                const ta=Math.random()*Math.PI*2;
+                particles.push({x:fx+Math.random()*8-4,y:fy+Math.random()*8-4,
+                    vx:Math.cos(ta)*.5,vy:Math.sin(ta)*.5,
+                    life:.8,dec:.02,sz:3+Math.random()*3,col:j%2?'#ffd700':'#FFFACD'});
+            }
+        }
+        // 乐小星图片飞行 + 光晕
+        ctx.save();
+        const starFlySize=24;
+        // 外层光晕
+        const starGlow=ctx.createRadialGradient(fx,fy,0,fx,fy,starFlySize*1.3);
+        starGlow.addColorStop(0,'rgba(255,215,0,0.35)');
+        starGlow.addColorStop(.6,'rgba(255,215,0,0.12)');
+        starGlow.addColorStop(1,'rgba(255,215,0,0)');
+        ctx.fillStyle=starGlow;
+        ctx.beginPath(); ctx.arc(fx,fy,starFlySize*1.3,0,Math.PI*2); ctx.fill();
+        // 乐小星图片
+        const starImg=gemImgs[STAR_TYPE];
+        if(starImg&&starImg.complete&&starImg.naturalWidth){
+            const sw=starImg.naturalWidth, sh=starImg.naturalHeight;
+            const ssc=starFlySize/Math.max(sw,sh);
+            const dw=sw*ssc, dh=sh*ssc;
+            ctx.drawImage(starImg,fx-dw/2,fy-dh/2,dw,dh);
+        }
+        ctx.restore();
+        if(p>=1){
+            starFlights.splice(i,1);
+            starsCollected++;
+            // 飞行到达后立即检测胜利
+            if(starsCollected>=STAR_TARGET && state!=='win'){
+                state='win'; sndWin(); bgmStop();
+            }
+            // 到达爆散 — reduce particles
+            const burstCount = _isMobile ? 10 : 18;
+            for(let j=0;j<burstCount;j++){
+                const a=Math.random()*Math.PI*2, sp=2+Math.random()*3;
+                particles.push({x:tx,y:ty,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+                    life:1,dec:.02,sz:3+Math.random()*4,col:j%3?'#ffd700':'#FFFACD'});
+            }
+            panelStarBounce=20;
+        }
+    }
+}
+
+// 加分飞行动画 (time-based)
+function drawScoreFlights(dt){
+    // 从队列取下一个（无飞行中时才取）
+    if(scoreFlights.length===0 && scoreQueue.length>0){
+        const next=scoreQueue.shift();
+        next.t=0;
+        scoreFlights.push(next);
+    }
+    const tx=123,ty=110; // 信息栏分数位置
+    for(let i=scoreFlights.length-1;i>=0;i--){
+        const f=scoreFlights[i];
+        f.t+=dt;
+        const p=Math.min(f.t/FLIGHT_DUR,1);
+        const ep=p<.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+        const fx=f.sx+(tx-f.sx)*ep, fy=f.sy+(ty-f.sy)*ep;
+        // 拖尾粒子 — reduce on mobile
+        if(particles.length<PARTICLE_CAP){
+            const trailCount = _isMobile ? 1 : 2;
+            for(let j=0;j<trailCount;j++){
+                const ta=Math.random()*Math.PI*2;
+                particles.push({x:fx+Math.random()*6-3,y:fy+Math.random()*6-3,
+                    vx:Math.cos(ta)*.3,vy:Math.sin(ta)*.3,
+                    life:.6,dec:.025,sz:2+Math.random()*2,col:j%2?'#FFD700':'#FFFACD'});
+            }
+        }
+        // 飞行中的加分文字 — no shadowBlur
+        ctx.save();
+        ctx.globalAlpha=1-p*.3;
+        ctx.font='bold 18px Fredoka,Arial,sans-serif';
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.lineJoin='round';
+        ctx.lineWidth=3; ctx.strokeStyle='#FF8C00';
+        ctx.strokeText(`+${f.pts}`,fx,fy-10);
+        ctx.fillStyle='#FFF8DC';
+        ctx.fillText(`+${f.pts}`,fx,fy-10);
+        ctx.restore();
+        if(p>=1){
+            scoreFlights.splice(i,1);
+            score+=f.pts;
+            // 到达爆散 — reduce particles
+            const burstCount = _isMobile ? 5 : 8;
+            for(let j=0;j<burstCount;j++){
+                const a=Math.random()*Math.PI*2, sp=1+Math.random()*2;
+                particles.push({x:tx,y:ty,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,
+                    life:1,dec:.03,sz:2+Math.random()*3,col:'#FFD700'});
+            }
+            panelScoreBounce=12;
+        }
+    }
+}
+
+function drawPopups(dt){
+    for(let i=popups.length-1;i>=0;i--){
+        const s=popups[i]; s.y-=1.2*(dt/16); s.a-=.02*(dt/16);
+        if(s.a<=0){popups.splice(i,1);continue;}
+        ctx.globalAlpha=Math.min(1,s.a);
+        ctx.fillStyle='#ffd700';
+        ctx.font=`bold ${Math.round(18*s.sc)}px Arial,sans-serif`;
+        ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(s.text,s.x,s.y);
+    }
+    ctx.globalAlpha=1;
+}
+
+/* ── Time-based animation helpers ── */
+const _flights = []; // unified flight array for time-based updates
+let _now = 0; // 每帧更新一次的时间戳，避免重复Date.now()
+
+/* ── Main loop ── */
+function draw(nowTs){
+    const dt = Math.min(nowTs - _lastTime, 50);
+    _lastTime = nowTs;
+    const now = Date.now();
+    _now = now; // 全局时间戳
+    // 更新交换动画
+    if(swapAn){
+        swapAn.p += dt / 150; // ~150ms完成
+        if(swapAn.p>=1){
+            const resolve=swapAn.res;
+            swapAn=null;
+            if(resolve) resolve();
+        }
+    }
+    try{
+    ctx.save();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#000'; ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.translate(ox,oy); ctx.scale(sc,sc);
+
+    if(state==='ready') {
+        if(bgImg.complete&&bgImg.naturalWidth) ctx.drawImage(bgImg,0,0,DW,DH);
+        else { ctx.fillStyle='#0f0c29'; ctx.fillRect(0,0,DW,DH); }
+        if(grid.length>0) { drawBoard(); }
+        drawPanel(); drawTools();
+        drawReady();
+    }
+    else {
+        if(bgImg.complete&&bgImg.naturalWidth) ctx.drawImage(bgImg,0,0,DW,DH);
+        else { ctx.fillStyle='#0f0c29'; ctx.fillRect(0,0,DW,DH); }
+        drawBoard(); drawPanel(); drawTools();
+        if(!paused){ drawParticles(dt); drawToolFlights(dt); drawScoreFlights(dt); }
+        drawPopups(dt);
+        // 结算界面等待所有飞行动画和加分完成后再显示
+        const allFlightsDone=scoreQueue.length===0&&scoreFlights.length===0&&starFlights.length===0;
+        if((state==='win'||state==='lose')&&allFlightsDone) drawResult();
+        if(paused) drawPause();
+    }
+    drawSoundBtn(); drawPauseBtn();
+    ctx.restore();
+    }catch(e){
+        ctx.restore();
+        ctx.fillStyle='#f00'; ctx.font='16px monospace';
+        ctx.fillText(e.message,10,30);
+        console.error('draw error:',e);
+    }
+    requestAnimationFrame(draw);
+}
+
+/* ── Utility ── */
+function rr(c,x,y,w,h,r){
+    c.beginPath();
+    c.moveTo(x+r,y); c.lineTo(x+w-r,y); c.quadraticCurveTo(x+w,y,x+w,y+r);
+    c.lineTo(x+w,y+h-r); c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    c.lineTo(x+r,y+h); c.quadraticCurveTo(x,y+h,x,y+h-r);
+    c.lineTo(x,y+r); c.quadraticCurveTo(x,y,x+r,y);
+    c.closePath();
+}
+
+requestAnimationFrame(draw);
+loadGameConfig();
+</script>
+</body>
+</html>

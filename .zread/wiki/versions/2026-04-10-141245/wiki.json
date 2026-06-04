@@ -1,0 +1,293 @@
+{
+  "id": "2026-04-10-141245",
+  "generated_at": "2026-04-10T06:12:45.6805341Z",
+  "language": "zh",
+  "pages": [
+    {
+      "slug": "1-xiang-mu-gai-lan",
+      "title": "项目概览",
+      "file": "1-xiang-mu-gai-lan.md",
+      "section": "快速开始",
+      "level": "Beginner"
+    },
+    {
+      "slug": "2-kuai-su-qi-dong",
+      "title": "快速启动",
+      "file": "2-kuai-su-qi-dong.md",
+      "section": "快速开始",
+      "level": "Beginner"
+    },
+    {
+      "slug": "3-zhe-tao-xi-tong-jie-jue-liao-shi-yao-wen-ti",
+      "title": "这套系统解决了什么问题",
+      "file": "3-zhe-tao-xi-tong-jie-jue-liao-shi-yao-wen-ti.md",
+      "section": "快速开始",
+      "group": "理解产品与使用场景",
+      "level": "Beginner"
+    },
+    {
+      "slug": "4-gua-he-na-xie-kai-fa-zhe-yue-du-yu-jie-shou",
+      "title": "适合哪些开发者阅读与接手",
+      "file": "4-gua-he-na-xie-kai-fa-zhe-yue-du-yu-jie-shou.md",
+      "section": "快速开始",
+      "group": "理解产品与使用场景",
+      "level": "Beginner"
+    },
+    {
+      "slug": "5-qian-duan-kai-fa-huan-jing-yu-gou-jian-ming-ling",
+      "title": "前端开发环境与构建命令",
+      "file": "5-qian-duan-kai-fa-huan-jing-yu-gou-jian-ming-ling.md",
+      "section": "快速开始",
+      "group": "本地运行与联调",
+      "level": "Beginner"
+    },
+    {
+      "slug": "6-hou-duan-fu-wu-qi-dong-yu-duan-kou-yue-ding",
+      "title": "后端服务启动与端口约定",
+      "file": "6-hou-duan-fu-wu-qi-dong-yu-duan-kou-yue-ding.md",
+      "section": "快速开始",
+      "group": "本地运行与联调",
+      "level": "Beginner"
+    },
+    {
+      "slug": "7-qian-hou-duan-lian-diao-de-shu-ju-ru-kou",
+      "title": "前后端联调的数据入口",
+      "file": "7-qian-hou-duan-lian-diao-de-shu-ju-ru-kou.md",
+      "section": "快速开始",
+      "group": "本地运行与联调",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "8-yi-dong-duan-yu-android-da-bao-ru-kou",
+      "title": "移动端与 Android 打包入口",
+      "file": "8-yi-dong-duan-yu-android-da-bao-ru-kou.md",
+      "section": "快速开始",
+      "group": "本地运行与联调",
+      "level": "Beginner"
+    },
+    {
+      "slug": "9-duo-men-dian-lu-you-yu-ye-mian-fang-wen-fang-shi",
+      "title": "多门店路由与页面访问方式",
+      "file": "9-duo-men-dian-lu-you-yu-ye-mian-fang-wen-fang-shi.md",
+      "section": "快速开始",
+      "group": "核心功能上手",
+      "level": "Beginner"
+    },
+    {
+      "slug": "10-cai-piao-xuan-hao-yu-tou-zhu-mo-ni-liu-cheng",
+      "title": "彩票选号与投注模拟流程",
+      "file": "10-cai-piao-xuan-hao-yu-tou-zhu-mo-ni-liu-cheng.md",
+      "section": "快速开始",
+      "group": "核心功能上手",
+      "level": "Beginner"
+    },
+    {
+      "slug": "11-gua-gua-le-lun-bo-chou-qu-ti-yan",
+      "title": "刮刮乐轮播抽取体验",
+      "file": "11-gua-gua-le-lun-bo-chou-qu-ti-yan.md",
+      "section": "快速开始",
+      "group": "核心功能上手",
+      "level": "Beginner"
+    },
+    {
+      "slug": "12-hou-tai-guan-li-tai-de-zhu-yao-ru-kou",
+      "title": "后台管理台的主要入口",
+      "file": "12-hou-tai-guan-li-tai-de-zhu-yao-ru-kou.md",
+      "section": "快速开始",
+      "group": "核心功能上手",
+      "level": "Beginner"
+    },
+    {
+      "slug": "13-qian-hou-duan-ti-hua-jia-gou-yu-bu-shu-xing-tai",
+      "title": "前后端一体化架构与部署形态",
+      "file": "13-qian-hou-duan-ti-hua-jia-gou-yu-bu-shu-xing-tai.md",
+      "section": "深入解析",
+      "group": "系统设计总览",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "14-duo-zu-hu-men-dian-mo-xing-yu-mo-ren-zhan-dian-ji-zhi",
+      "title": "多租户门店模型与默认站点机制",
+      "file": "14-duo-zu-hu-men-dian-mo-xing-yu-mo-ren-zhan-dian-ji-zhi.md",
+      "section": "深入解析",
+      "group": "系统设计总览",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "15-jing-tai-zi-yuan-shi-shi-shu-ju-yu-ben-di-shu-ju-ku-de-fen-gong",
+      "title": "静态资源、实时数据与本地数据库的分工",
+      "file": "15-jing-tai-zi-yuan-shi-shi-shu-ju-yu-ben-di-shu-ju-ku-de-fen-gong.md",
+      "section": "深入解析",
+      "group": "系统设计总览",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "16-ying-yong-ru-kou-lu-you-shu-yu-cuo-wu-bian-jie",
+      "title": "应用入口、路由树与错误边界",
+      "file": "16-ying-yong-ru-kou-lu-you-shu-yu-cuo-wu-bian-jie.md",
+      "section": "深入解析",
+      "group": "前端实现核心",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "17-men-dian-rong-qi-zhong-de-xin-tiao-shang-bao-yu-yuan-cheng-tiao-zhuan",
+      "title": "门店容器中的心跳上报与远程跳转",
+      "file": "17-men-dian-rong-qi-zhong-de-xin-tiao-shang-bao-yu-yuan-cheng-tiao-zhuan.md",
+      "section": "深入解析",
+      "group": "前端实现核心",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "18-da-le-tou-zhu-ye-de-zhuang-tai-guan-li-yu-jiao-hu-mi-du-kong-zhi",
+      "title": "大乐透主页的状态管理与交互密度控制",
+      "file": "18-da-le-tou-zhu-ye-de-zhuang-tai-guan-li-yu-jiao-hu-mi-du-kong-zhi.md",
+      "section": "深入解析",
+      "group": "前端实现核心",
+      "level": "Advanced"
+    },
+    {
+      "slug": "19-duo-feng-ge-men-dian-men-hu-de-zhu-ti-kuo-zhan-fang-shi",
+      "title": "多风格门店门户的主题扩展方式",
+      "file": "19-duo-feng-ge-men-dian-men-hu-de-zhu-ti-kuo-zhan-fang-shi.md",
+      "section": "深入解析",
+      "group": "前端实现核心",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "20-gua-gua-le-ye-mian-de-fen-dang-pei-zhi-yu-dong-xiao-bian-pai",
+      "title": "刮刮乐页面的分档配置与动效编排",
+      "file": "20-gua-gua-le-ye-mian-de-fen-dang-pei-zhi-yu-dong-xiao-bian-pai.md",
+      "section": "深入解析",
+      "group": "前端实现核心",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "21-zong-zhan-hou-tai-yu-men-dian-hou-tai-de-quan-xian-fen-ceng",
+      "title": "总站后台与门店后台的权限分层",
+      "file": "21-zong-zhan-hou-tai-yu-men-dian-hou-tai-de-quan-xian-fen-ceng.md",
+      "section": "深入解析",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "22-yi-biao-pan-tong-ji-qi-hao-shai-xuan-yu-men-dian-fen-xi",
+      "title": "仪表盘统计、期号筛选与门店分析",
+      "file": "22-yi-biao-pan-tong-ji-qi-hao-shai-xuan-yu-men-dian-fen-xi.md",
+      "section": "深入解析",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "23-pa-chong-jian-kong-mian-ban-yu-ding-shi-zhua-qu-pei-zhi",
+      "title": "爬虫监控面板与定时抓取配置",
+      "file": "23-pa-chong-jian-kong-mian-ban-yu-ding-shi-zhua-qu-pei-zhi.md",
+      "section": "深入解析",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "24-men-dian-pei-zhi-ban-shi-guan-li-yu-zhong-jiang-xi-bao-fa-bu",
+      "title": "门店配置、版式管理与中奖喜报发布",
+      "file": "24-men-dian-pei-zhi-ban-shi-guan-li-yu-zhong-jiang-xi-bao-fa-bu.md",
+      "section": "深入解析",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "25-yun-shi-nei-rong-guan-li-yu-zhan-shi-lian-dong",
+      "title": "运势内容管理与展示联动",
+      "file": "25-yun-shi-nei-rong-guan-li-yu-zhan-shi-lian-dong.md",
+      "section": "深入解析",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "26-express-fu-wu-ru-kou-yu-jing-tai-fa-bu-ce-lue",
+      "title": "Express 服务入口与静态发布策略",
+      "file": "26-express-fu-wu-ru-kou-yu-jing-tai-fa-bu-ce-lue.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "27-ben-di-json-shu-ju-ku-de-chu-shi-hua-qian-yi-yu-jian-rong-luo-ji",
+      "title": "本地 JSON 数据库的初始化、迁移与兼容逻辑",
+      "file": "27-ben-di-json-shu-ju-ku-de-chu-shi-hua-qian-yi-yu-jian-rong-luo-ji.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Advanced"
+    },
+    {
+      "slug": "28-kai-jiang-li-shi-zhua-qu-de-quan-guo-yuan-yu-fu-jian-yuan-hui-tui-ji-zhi",
+      "title": "开奖历史抓取的全国源与福建源回退机制",
+      "file": "28-kai-jiang-li-shi-zhua-qu-de-quan-guo-yuan-yu-fu-jian-yuan-hui-tui-ji-zhi.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Advanced"
+    },
+    {
+      "slug": "29-zi-xun-yu-gong-yi-jin-zhua-qu-guan-xian-de-ju-he-shu-chu",
+      "title": "资讯与公益金抓取管线的聚合输出",
+      "file": "29-zi-xun-yu-gong-yi-jin-zhua-qu-guan-xian-de-ju-he-shu-chu.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Advanced"
+    },
+    {
+      "slug": "30-sheng-xiao-xing-zuo-yun-shi-tong-bu-yu-yan-se-biao-zhun-hua",
+      "title": "生肖星座运势同步与颜色标准化",
+      "file": "30-sheng-xiao-xing-zuo-yun-shi-tong-bu-yu-yan-se-biao-zhun-hua.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Advanced"
+    },
+    {
+      "slug": "31-gua-gua-le-piao-mian-zhua-qu-pin-jie-yu-tu-pian-ku-guan-li",
+      "title": "刮刮乐票面抓取、拼接与图片库管理",
+      "file": "31-gua-gua-le-piao-mian-zhua-qu-pin-jie-yu-tu-pian-ku-guan-li.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Advanced"
+    },
+    {
+      "slug": "32-qi-ye-wei-xin-tu-pian-tui-song-yu-xiao-xi-fa-song-lian-lu",
+      "title": "企业微信图片推送与消息发送链路",
+      "file": "32-qi-ye-wei-xin-tu-pian-tui-song-yu-xiao-xi-fa-song-lian-lu.md",
+      "section": "深入解析",
+      "group": "后端服务与数据采集",
+      "level": "Advanced"
+    },
+    {
+      "slug": "33-nginx-dist-fa-bu-yu-huan-cun-kong-zhi-yao-dian",
+      "title": "Nginx、dist 发布与缓存控制要点",
+      "file": "33-nginx-dist-fa-bu-yu-huan-cun-kong-zhi-yao-dian.md",
+      "section": "深入解析",
+      "group": "部署、运维与排障",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "34-zi-dong-hua-bu-shu-jiao-ben-yu-yuan-cheng-xiao-yan-jiao-ben-zu",
+      "title": "自动化部署脚本与远程校验脚本族",
+      "file": "34-zi-dong-hua-bu-shu-jiao-ben-yu-yuan-cheng-xiao-yan-jiao-ben-zu.md",
+      "section": "深入解析",
+      "group": "部署、运维与排障",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "35-pa-chong-diao-shi-jiao-ben-ce-shi-jiao-ben-yu-gu-zhang-ding-wei-fang-fa",
+      "title": "爬虫调试脚本、测试脚本与故障定位方法",
+      "file": "35-pa-chong-diao-shi-jiao-ben-ce-shi-jiao-ben-yu-gu-zhang-ding-wei-fang-fa.md",
+      "section": "深入解析",
+      "group": "部署、运维与排障",
+      "level": "Advanced"
+    },
+    {
+      "slug": "36-cang-ku-zhong-de-bei-fen-lin-shi-wen-jian-yu-li-shi-zi-chan-ying-ru-he-shi-bie",
+      "title": "仓库中的备份、临时文件与历史资产应如何识别",
+      "file": "36-cang-ku-zhong-de-bei-fen-lin-shi-wen-jian-yu-li-shi-zi-chan-ying-ru-he-shi-bie.md",
+      "section": "深入解析",
+      "group": "部署、运维与排障",
+      "level": "Intermediate"
+    }
+  ]
+}

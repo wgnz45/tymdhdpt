@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no,maximum-scale=1.0">
+<title>乐小星快飞</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#4ec0ca;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+canvas{display:block;margin:0 auto;image-rendering:pixelated}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+// ====== Flappy Bird H5 - Optimized ======
+const _fromPage=new URLSearchParams(location.search).get('from')||'/';
+function goHome(){btnFx=[];pressedBtn=null;location.href=_fromPage;}
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+
+// --- Responsive sizing ---
+let W, H;
+function resize() {
+    W = Math.min(window.innerWidth, 420);
+    H = window.innerHeight;
+    canvas.width = W;
+    canvas.height = H;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// --- Design constants ---
+const DW = 288, DH = 512;
+const BIRD_X = 68;
+let GRAVITY = 0.45;
+let FLAP_POWER = -7.5;
+const PIPE_WIDTH = 52;
+let BASE_GAP = 125, MIN_GAP = 100;
+let BASE_SPEED = 2.2, MAX_SPEED = 3.8;
+let PIPE_INTERVAL = 160;
+const GROUND_H = 112;
+
+// --- 远程配置 ---
+let _medals = { bronze: 10, silver: 20, gold: 40 };
+async function loadGameConfig(){
+    try{
+        const r=await fetch('/api/game-config');
+        if(r.ok){ const d=await r.json(); const c=d['flappy-bird']||{};
+            GRAVITY=c.GRAVITY??GRAVITY; FLAP_POWER=c.FLAP_POWER??FLAP_POWER;
+            BASE_GAP=c.BASE_GAP??BASE_GAP; MIN_GAP=c.MIN_GAP??MIN_GAP;
+            BASE_SPEED=c.BASE_SPEED??BASE_SPEED; MAX_SPEED=c.MAX_SPEED??MAX_SPEED;
+            PIPE_INTERVAL=c.PIPE_INTERVAL??PIPE_INTERVAL;
+            if(c.medals) _medals={..._medals,...c.medals};
+        }
+    }catch(e){}
+}
+
+// --- Difficulty scaling ---
+function getSpeed() { return Math.min(BASE_SPEED + score * 0.04, MAX_SPEED); }
+function getGap() { return Math.max(BASE_GAP - score * 0.6, MIN_GAP); }
+
+// --- Audio (Web Audio API, lazy init) ---
+let audioCtx = null;
+function ensureAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function beep(freq, dur, type, vol) {
+    if (!audioCtx) return;
+    try {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(vol, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + dur);
+    } catch(e) {}
+}
+const sndFlap  = () => beep(500, 0.07, 'sine', 0.10);
+const sndScore = () => beep(880, 0.12, 'sine', 0.12);
+const sndHit   = () => beep(200, 0.18, 'square', 0.14);
+const sndDie   = () => beep(140, 0.35, 'sawtooth', 0.10);
+const sndClick = () => beep(660, 0.05, 'sine', 0.08);
+
+// --- State ---
+function setState(s) { state = s; btnFx = []; pressedBtn = null; }
+let state = 'ready';
+let score = 0;
+let bestScore = parseInt(localStorage.getItem('flappy_best') || '0');
+let bird = { y: 0, vy: 0, rot: 0, wing: 0 };
+let pipes = [], particles = [], popups = [];
+let demoPipes = [], demoTimer = 0;
+let pipeTimer = 0, groundX = 0;
+let flashAlpha = 0, shakeTimer = 0, deathY = 0;
+let flyProgress = 0; // 0→1 平飞进度
+let lastTs = 0, accum = 0;
+const TICK = 1000 / 60;
+
+// --- Button press visual feedback ---
+let btnFx = [];
+let pressedBtn = null; // key of button currently pressed
+function addBtnFx(img, btn) {
+    if (!btn) return;
+    btnFx.push({ img, x: btn.x, y: btn.y, w: btn.w, h: btn.h, t: 12, st: state });
+}
+// Draw button image with press-down effect (scale + opacity, respects PNG transparency)
+function drawBtn(img, x, y, w, h, key) {
+    if (!img || !img.complete || !img.naturalWidth) return;
+    if (pressedBtn === key) {
+        ctx.globalAlpha = 0.75;
+        const s = 0.88;
+        ctx.drawImage(img, x + w*(1-s)/2, y + h*(1-s)/2, w*s, h*s);
+        ctx.globalAlpha = 1;
+    } else {
+        ctx.drawImage(img, x, y, w, h);
+    }
+}
+function findBtnKey(sx, sy) {
+    const {vx, vy} = screenToVirtual(sx, sy);
+    if (state === 'ready') return hitBtn(vx, vy, uiBtns.start) ? 'start' : null;
+    if (state === 'playing') return hitBtn(vx, vy, PAUSE_BTN) ? 'pause' : null;
+    if (state === 'paused') {
+        if (hitBtn(vx, vy, uiBtns.close)) return 'close';
+        if (hitBtn(vx, vy, uiBtns.home)) return 'home';
+        if (hitBtn(vx, vy, uiBtns.retry)) return 'retry';
+        return null;
+    }
+    if (state === 'dead') {
+        if (hitBtn(vx, vy, uiBtns.home)) return 'home';
+        if (hitBtn(vx, vy, uiBtns.retry)) return 'retry';
+        return null;
+    }
+    return null;
+}
+
+// --- Load 乐小星 image ---
+const birdImg = new Image();
+birdImg.src = '乐小星小鸟版.png';
+let birdImgReady = false;
+birdImg.onload = () => { birdImgReady = true; };
+
+// --- 背景图片 ---
+const bgImg = new Image();
+bgImg.onerror = () => { console.warn('背景图加载失败:', bgImg.src); };
+bgImg.src = '小鸟背景.png';
+
+// --- UI 素材 ---
+function loadUI(f) { const img = new Image(); img.src = f; return img; }
+const uiLogo = loadUI('小鸟logo.png');
+const uiStartBtn = loadUI('小鸟开始按钮.png');
+const uiPauseBtn = loadUI('小鸟暂停按钮.png');
+const uiPausePopup = loadUI('小鸟暂停弹窗.png');
+const uiResult = loadUI('小鸟结算弹窗.png');
+const uiCloseBtn = loadUI('小鸟关闭按钮.png');
+const uiHomeBtn = loadUI('小鸟返回主页.png');
+const uiRetryBtn = loadUI('小鸟继续按钮.png');
+
+// --- 海报图片 ---
+const POSTER_FILES = ['小鸟海报第一张.png','小鸟海报第二张.png','小鸟海报第三张.png','小鸟海报第四张.png','小鸟海报第五张.png'];
+const posterImgs = [];
+POSTER_FILES.forEach(f => {
+    const img = new Image();
+    img.src = f;
+    posterImgs.push(img);
+});
+
+// 海报离屏 canvas 缓存（避免每帧重算宽高+多次drawImage）
+let posterCanvas = null, posterStripW = 0, posterH = 0;
+let posterLoaded = false;
+function buildPosterStrip() {
+    const groundY = DH - GROUND_H + 16;
+    const pH = DH - groundY;
+    if (pH <= 0) return;
+    posterH = pH;
+    // 等比计算每张宽度
+    const widths = [];
+    let totalW = 0;
+    for (const im of posterImgs) {
+        if (!im.complete || !im.naturalWidth) return;
+        const w = im.naturalWidth * pH / im.naturalHeight;
+        widths.push(w); totalW += w;
+    }
+    if (totalW <= 0) return;
+    posterStripW = totalW;
+    // 创建离屏canvas，宽度=两倍totalW（无缝循环）
+    const c = document.createElement('canvas');
+    c.width = Math.ceil(totalW * 2);
+    c.height = Math.ceil(pH);
+    const cx = c.getContext('2d');
+    // 绘制两轮
+    for (let round = 0; round < 2; round++) {
+        let dx = round * totalW;
+        for (let i = 0; i < posterImgs.length; i++) {
+            cx.drawImage(posterImgs[i], dx, 0, widths[i], pH);
+            // 分割线
+            cx.fillStyle = 'rgba(255,255,255,.5)';
+            cx.fillRect(dx, 0, 2, pH);
+            cx.fillStyle = 'rgba(0,0,0,.15)';
+            cx.fillRect(dx + 2, 0, 1, pH);
+            dx += widths[i];
+        }
+    }
+    posterCanvas = c;
+    posterLoaded = true;
+}
+// 图片加载完后构建缓存
+posterImgs.forEach(im => {
+    im.onload = () => { if (posterImgs.every(x => x.complete && x.naturalWidth)) buildPosterStrip(); };
+});
+
+// --- 管道图片 ---
+const PIPE_FILES = ['绿色管道.png','紫色管道.png','白色管道.png','粉色管道.png','黄色管道.png','蓝色管道.png'];
+const pipeImgs = [];
+PIPE_FILES.forEach(f => {
+    const img = new Image();
+    img.src = f;
+    pipeImgs.push(img);
+});
+
+// --- Decorations ---
+let clouds = [
+    { x: 40, y: 80, s: 1, sp: 0.3 },
+    { x: 180, y: 140, s: 0.7, sp: 0.2 },
+    { x: 260, y: 60, s: 0.5, sp: 0.15 }
+];
+
+// Background buildings (generated once)
+let blds = [];
+function genBuildings() {
+    blds = []; let bx = 0;
+    while (bx < DW + 40) {
+        const bw = 15 + Math.random() * 25, bh = 25 + Math.random() * 55;
+        blds.push({ x: bx, w: bw, h: bh, c: `hsl(200,8%,${62 + Math.random() * 16}%)` });
+        bx += bw + Math.random() * 5;
+    }
+}
+genBuildings();
+
+// Cached sky gradient + 背景裁剪参数
+let skyGrad = null;
+let bgCropParams = null;
+function cacheBgCrop() {
+    if (!bgImg || !bgImg.complete || !bgImg.naturalWidth) { bgCropParams = null; return; }
+    const iw = bgImg.naturalWidth, ih = bgImg.naturalHeight;
+    const scaleBG = Math.max(DW/iw, DH/ih);
+    const sw = DW/scaleBG, sh = DH/scaleBG;
+    bgCropParams = { sx: (iw-sw)/2, sy: (ih-sh)/2, sw, sh };
+}
+bgImg.onload = () => { cacheBgCrop(); if (posterImgs.every(x=>x.complete&&x.naturalWidth)) buildPosterStrip(); };
+bgImg.onerror = () => { bgCropParams = null; };
+
+// --- Reset ---
+function reset() {
+    bird.y = DH / 2 - 20; bird.vy = 0; bird.rot = 0; bird.wing = 0;
+    pipes = []; particles = []; popups = [];
+    pipeTimer = PIPE_INTERVAL - 30;
+    score = 0; flashAlpha = 0; shakeTimer = 0;
+}
+
+// --- Particles ---
+function emit(x, y, n, col) {
+    for (let i = 0; i < n; i++) {
+        const a = Math.random() * Math.PI * 2, sp = 1 + Math.random() * 3;
+        particles.push({ x, y, vx: Math.cos(a)*sp, vy: Math.sin(a)*sp - 2,
+            life: 1, dec: 0.02 + Math.random()*0.02, sz: 2+Math.random()*3, col });
+    }
+}
+
+// --- UI Button Layout (virtual coords) ---
+const PAUSE_BTN = { x: 248, y: 6, w: 36, h: 36 }; // 游戏内暂停按钮
+// 结算/暂停面板按钮位置会在 draw 函数中动态计算，这里存起来供点击检测
+let uiBtns = { close:null, home:null, retry:null, start:null };
+
+// --- Input ---
+function screenToVirtual(sx, sy) {
+    const rect = canvas.getBoundingClientRect();
+    const cx = sx - rect.left, cy = sy - rect.top;
+    const cw = canvas.width, ch = canvas.height;
+    const s = Math.min(cw/DW, ch/DH);
+    const ox = (cw - DW*s)/2, oy = (ch - DH*s)/2;
+    return { vx: (cx - ox) / s, vy: (cy - oy) / s };
+}
+function hitBtn(vx, vy, btn) {
+    if (!btn) return false;
+    return vx >= btn.x && vx <= btn.x + btn.w && vy >= btn.y && vy <= btn.y + btn.h;
+}
+
+function handleClick(sx, sy) {
+    ensureAudio();
+    const {vx, vy} = screenToVirtual(sx, sy);
+
+    if (state === 'ready') {
+        if (!hitBtn(vx, vy, uiBtns.start)) return;
+        addBtnFx(uiStartBtn, uiBtns.start); sndClick();
+        reset();
+        demoPipes = []; demoTimer = 0;
+        setState('flying'); flyProgress = 0;
+        return;
+    }
+    if (state === 'flying') {
+        bird.vy = FLAP_POWER; bird.wing = 0;
+        sndFlap();
+        setState('playing');
+        return;
+    }
+    if (state === 'playing') {
+        if (hitBtn(vx, vy, PAUSE_BTN)) { addBtnFx(uiPauseBtn, PAUSE_BTN); sndClick(); setState('paused'); return; }
+        bird.vy = FLAP_POWER; bird.wing = 0;
+        sndFlap();
+        return;
+    }
+    if (state === 'paused') {
+        if (hitBtn(vx, vy, uiBtns.close)) { addBtnFx(uiCloseBtn, uiBtns.close); sndClick(); setState('playing'); return; }
+        if (hitBtn(vx, vy, uiBtns.home)) { addBtnFx(uiHomeBtn, uiBtns.home); sndClick(); goHome(); return; }
+        if (hitBtn(vx, vy, uiBtns.retry)) { addBtnFx(uiRetryBtn, uiBtns.retry); sndClick(); setState('playing'); return; }
+        return;
+    }
+    if (state === 'dead') {
+        if (hitBtn(vx, vy, uiBtns.home)) { addBtnFx(uiHomeBtn, uiBtns.home); sndClick(); goHome(); return; }
+        if (hitBtn(vx, vy, uiBtns.retry)) { addBtnFx(uiRetryBtn, uiBtns.retry); sndClick(); setState('ready'); reset(); return; }
+        return;
+    }
+}
+
+canvas.addEventListener('touchstart', e => { e.preventDefault(); const t=e.touches[0]; pressedBtn=findBtnKey(t.clientX,t.clientY); handleClick(t.clientX, t.clientY); }, { passive: false });
+canvas.addEventListener('touchend', e => { e.preventDefault(); pressedBtn=null; }, { passive: false });
+canvas.addEventListener('mousedown', e => { e.preventDefault(); pressedBtn=findBtnKey(e.clientX,e.clientY); handleClick(e.clientX, e.clientY); });
+canvas.addEventListener('mouseup', e => { e.preventDefault(); pressedBtn=null; });
+document.addEventListener('keydown', e => {
+    if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault();
+        if (state === 'ready') { reset(); demoPipes = []; demoTimer = 0; setState('flying'); flyProgress = 0; return; }
+        if (state === 'flying') { bird.vy = FLAP_POWER; bird.wing = 0; sndFlap(); setState('playing'); return; }
+        if (state === 'playing') { bird.vy = FLAP_POWER; bird.wing = 0; sndFlap(); return; }
+        if (state === 'paused') { setState('playing'); return; }
+        if (state === 'dead') { setState('ready'); reset(); return; }
+    }
+});
+
+// --- Die ---
+function die() {
+    if (state === 'dead') return;
+    setState('dead'); bird.vy = -4;
+    deathY = DH - GROUND_H - 12;
+    flashAlpha = 0.6; shakeTimer = 8;
+    sndHit(); setTimeout(sndDie, 150);
+    emit(BIRD_X, bird.y, 15, '#f8c830');
+    if (score > bestScore) {
+        bestScore = score;
+        localStorage.setItem('flappy_best', bestScore);
+    }
+}
+
+// --- Update (fixed timestep) ---
+function update() {
+    if (state === 'paused') return; // 暂停时不更新
+
+    // Ready 状态：演示管道 + 模拟玩家点击飞行
+    if (state === 'ready') {
+        const spd = BASE_SPEED;
+        groundX -= spd;
+
+        // 演示管道生成
+        demoTimer++;
+        if (demoTimer >= PIPE_INTERVAL) {
+            demoTimer = 0;
+            const gap = BASE_GAP + 20;
+            const minT = 60, maxT = DH - GROUND_H - gap - 60;
+            const ci = Math.floor(Math.random() * pipeImgs.length);
+            demoPipes.push({ x: DW + 10, top: minT + Math.random()*(maxT-minT), gap, ci });
+        }
+
+        // 移动演示管道
+        for (let i = demoPipes.length - 1; i >= 0; i--) {
+            demoPipes[i].x -= spd;
+            if (demoPipes[i].x + PIPE_WIDTH < -10) { demoPipes.splice(i, 1); }
+        }
+
+        // 鸟物理：重力 + 模拟点击跳跃
+        bird.vy += GRAVITY;
+        bird.y += bird.vy;
+        bird.wing += 0.3;
+        if (bird.vy < 0) bird.rot = Math.max(-25, bird.vy * 4);
+        else bird.rot = Math.min(70, bird.rot + 3);
+
+        // 模拟玩家决策：找前方下一个管道，提前校准路线
+        let shouldFlap = false;
+        let nextPipe = null;
+        for (const p of demoPipes) {
+            if (p.x + PIPE_WIDTH > BIRD_X) { nextPipe = p; break; }
+        }
+        if (nextPipe) {
+            const gapCenter = nextPipe.top + nextPipe.gap * 0.65;
+            const dist = nextPipe.x - BIRD_X;
+            const offset = dist > 80 ? gapCenter + 8 : gapCenter;
+            if (bird.y > offset) shouldFlap = true;
+        } else {
+            // 没有管道时保持在屏幕中间偏上
+            if (bird.y > DH / 2) shouldFlap = true;
+        }
+
+        if (shouldFlap) {
+            bird.vy = FLAP_POWER;
+            bird.wing = 0;
+        }
+
+        // 边界限制
+        if (bird.y > DH - GROUND_H - 15) { bird.y = DH - GROUND_H - 15; bird.vy = 0; }
+        if (bird.y < 15) { bird.y = 15; bird.vy = 0; }
+
+        return;
+    }
+
+    if (state === 'flying') {
+        groundX -= BASE_SPEED;
+        flyProgress = Math.min(1, flyProgress + 0.02);
+        bird.y = DH / 2 - 20 + Math.sin(Date.now() / 300) * 6;
+        bird.vy = 0; bird.rot = 0; bird.wing += 0.3;
+        return;
+    }
+
+    const spd = state === 'playing' ? getSpeed() : BASE_SPEED;
+
+    // Ground always scrolls
+    if (state !== 'dead') groundX -= spd;
+
+    if (state === 'playing') {
+        // Bird physics
+        bird.vy += GRAVITY;
+        bird.y += bird.vy;
+        bird.wing += 0.3;
+
+        // Rotation
+        if (bird.vy < 0) bird.rot = Math.max(-25, bird.vy * 4);
+        else bird.rot = Math.min(70, bird.rot + 3);
+
+        // Spawn pipes
+        pipeTimer++;
+        if (pipeTimer >= PIPE_INTERVAL) {
+            pipeTimer = 0;
+            const gap = getGap();
+            const minT = 40, maxT = DH - GROUND_H - gap - 40;
+            const ci = Math.floor(Math.random() * pipeImgs.length);
+            pipes.push({ x: DW + 10, top: minT + Math.random()*(maxT-minT), gap, scored: false, ci });
+        }
+
+        // Move & score pipes
+        for (let i = pipes.length - 1; i >= 0; i--) {
+            pipes[i].x -= spd;
+            if (pipes[i].x + PIPE_WIDTH < -10) { pipes.splice(i, 1); continue; }
+            if (!pipes[i].scored && pipes[i].x + PIPE_WIDTH < BIRD_X - 12) {
+                pipes[i].scored = true; score++;
+                sndScore();
+                emit(BIRD_X, bird.y, 6, '#fff');
+            }
+        }
+
+        // Collision: ground
+        if (bird.y + 12 > DH - GROUND_H) { bird.y = DH - GROUND_H - 12; die(); }
+
+        // Collision: ceiling
+        if (bird.y - 12 < 0) { bird.y = 12; }
+
+        // Collision: pipes
+        const bx = BIRD_X - 12, bw = 24, by = bird.y - 10, bh = 20;
+        for (const p of pipes) {
+            if (bx+bw > p.x && bx < p.x+PIPE_WIDTH) {
+                if (by < p.top || by+bh > p.top+p.gap) { die(); break; }
+            }
+        }
+    }
+
+    if (state === 'dead') {
+        bird.vy += GRAVITY;
+        bird.y += bird.vy;
+        bird.rot = Math.min(90, bird.rot + 5);
+        if (bird.y > deathY) { bird.y = deathY; bird.vy = 0; }
+    }
+
+    // Flash
+    if (flashAlpha > 0) flashAlpha -= 0.05;
+    if (shakeTimer > 0) shakeTimer--;
+
+    // Particles
+    for (let i = particles.length-1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.1; p.life -= p.dec;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    // Score popups
+    for (let i = popups.length-1; i >= 0; i--) {
+        const s = popups[i];
+        s.y -= 0.8; s.a -= 0.025; s.sc = Math.max(1, s.sc - 0.03);
+        if (s.a <= 0) popups.splice(i, 1);
+    }
+
+    // Button press effects
+    if (btnFx.length) btnFx = btnFx.filter(f => { f.t--; return f.t > 0; });
+}
+
+// ====== Draw ======
+function draw() {
+    const cw = canvas.width, ch = canvas.height;
+    const sx = cw/DW, sy = ch/DH, s = Math.min(sx, sy);
+    const ox = (cw - DW*s)/2, oy = (ch - DH*s)/2;
+
+    ctx.save();
+    ctx.fillStyle = '#4ec0ca'; ctx.fillRect(0, 0, cw, ch);
+
+    if (shakeTimer > 0) {
+        ctx.translate((Math.random()-.5)*6*(shakeTimer/8), (Math.random()-.5)*6*(shakeTimer/8));
+    }
+    ctx.translate(ox, oy); ctx.scale(s, s);
+
+    // Background - 使用缓存裁剪参数
+    if (bgCropParams) {
+        const bp = bgCropParams;
+        ctx.drawImage(bgImg, bp.sx, bp.sy, bp.sw, bp.sh, 0, 0, DW, DH);
+    } else if (bgImg && bgImg.complete && bgImg.naturalWidth) {
+        cacheBgCrop();
+        if (bgCropParams) {
+            const bp = bgCropParams;
+            ctx.drawImage(bgImg, bp.sx, bp.sy, bp.sw, bp.sh, 0, 0, DW, DH);
+        }
+    } else {
+        if (!skyGrad) {
+            skyGrad = ctx.createLinearGradient(0, 0, 0, DH-GROUND_H);
+            skyGrad.addColorStop(0, '#4ec0ca');
+            skyGrad.addColorStop(1, '#71c5cf');
+        }
+        ctx.fillStyle = skyGrad;
+        ctx.fillRect(0, 0, DW, DH);
+    }
+
+    // Demo pipes (ready screen)
+    for (const p of demoPipes) { drawPipe(p.x, p.top, true, p.gap, p.ci); drawPipe(p.x, p.top+p.gap, false, p.gap, p.ci); }
+    // Pipes
+    for (const p of pipes) { drawPipe(p.x, p.top, true, p.gap, p.ci); drawPipe(p.x, p.top+p.gap, false, p.gap, p.ci); }
+
+    // Ground
+    const gy = DH - GROUND_H;
+
+    // 草地 + 花点缀
+    const grassGrad = ctx.createLinearGradient(0, gy, 0, gy + 16);
+    grassGrad.addColorStop(0, '#7ec850');
+    grassGrad.addColorStop(.3, '#6ab83e');
+    grassGrad.addColorStop(1, '#5a9e32');
+    ctx.fillStyle = grassGrad;
+    ctx.fillRect(0, gy, DW, 16);
+    ctx.fillStyle = '#9de06a'; ctx.fillRect(0, gy, DW, 2);
+    // 滚动草丛纹理
+    ctx.fillStyle = '#5a9e32';
+    for (let i = -1; i < DW / 10 + 2; i++) {
+        const gx = i * 10 + ((groundX % 10) + 10) % 10;
+        ctx.fillRect(gx, gy + 4, 3, 2);
+        ctx.fillRect(gx + 5, gy + 8, 3, 2);
+        ctx.fillRect(gx + 2, gy + 12, 3, 2);
+    }
+    // 小花点缀
+    const flowerColors = ['#ff6b8a','#ffb347','#fff176','#ce93d8','#81d4fa'];
+    const flowerSeeds = [23,67,105,158,210,273,320,380,445,510,578,640,710,780,855,930];
+    for (let fi = 0; fi < flowerSeeds.length; fi++) {
+        const fx = ((flowerSeeds[fi] + groundX) % (DW + 20) + DW + 20) % (DW + 20) - 10;
+        const fy = gy + 3 + (fi % 3) * 4;
+        const fc = flowerColors[fi % flowerColors.length];
+        ctx.fillStyle = fc;
+        for (let a = 0; a < 5; a++) {
+            const ang = a * Math.PI * 2 / 5;
+            ctx.beginPath();
+            ctx.arc(fx + Math.cos(ang) * 2.2, fy + Math.sin(ang) * 2.2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        ctx.fillStyle = '#fff176';
+        ctx.beginPath(); ctx.arc(fx, fy, 1.2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // 海报滚动（离屏canvas缓存）
+    const posterY = gy + 16;
+    if (posterLoaded && posterCanvas && posterH > 0) {
+        const offset = ((-groundX) % posterStripW + posterStripW) % posterStripW;
+        ctx.save();
+        ctx.beginPath(); ctx.rect(0, posterY, DW, posterH); ctx.clip();
+        ctx.drawImage(posterCanvas, offset, 0, DW, posterH, 0, posterY, DW, posterH);
+        // 如果一次不够铺满，再补一段
+        const drawnW = Math.min(DW, posterCanvas.width - offset);
+        if (drawnW < DW) {
+            ctx.drawImage(posterCanvas, 0, 0, DW - drawnW, posterH, drawnW, posterY, DW - drawnW, posterH);
+        }
+        ctx.restore();
+    }
+
+    // Particles
+    for (const p of particles) {
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.col;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.sz*p.life, 0, Math.PI*2);
+        ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Bird
+    drawBird();
+
+    // In-game score
+    if (state === 'playing') drawBigScore(score, DW/2, 60);
+
+    // Score popups
+    for (const sp of popups) {
+        ctx.globalAlpha = Math.min(sp.a, 1);
+        ctx.font = `bold ${Math.round(28*sp.sc)}px Arial,sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.fillStyle = '#ffd700';
+        ctx.fillText('+1', sp.x, sp.y);
+    }
+    ctx.globalAlpha = 1;
+
+    // Flash
+    if (flashAlpha > 0) {
+        ctx.fillStyle = `rgba(255,255,255,${flashAlpha})`;
+        ctx.fillRect(0, 0, DW, DH);
+    }
+
+    // UI overlays
+    if (state === 'ready') drawReady();
+    if (state === 'flying') drawFlying();
+    if (state === 'playing' || state === 'paused') drawPauseBtn();
+    if (state === 'paused') drawPaused();
+    if (state === 'dead') drawGameOver();
+
+    // Button click feedback: PNG image diffusion fade (respects transparency)
+    for (const f of btnFx) {
+        if (f.st !== state) continue;
+        if (!f.img || !f.img.complete || !f.img.naturalWidth) continue;
+        const p = 1 - f.t / 12;
+        const alpha = 0.5 * (1 - p);
+        const expand = p * 0.15;
+        ctx.globalAlpha = alpha;
+        const fw = f.w * (1 + expand), fh = f.h * (1 + expand);
+        ctx.drawImage(f.img, f.x - (fw - f.w)/2, f.y - (fh - f.h)/2, fw, fh);
+        ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+}
+
+// --- Draw bird (乐小星) ---
+function drawBird() {
+    let x = BIRD_X;
+    if (state === 'flying' && flyProgress < 1) {
+        const ease = 1 - Math.pow(1 - flyProgress, 3);
+        x = -40 + (BIRD_X + 40) * ease;
+    }
+    const y = bird.y, rot = bird.rot * Math.PI / 180;
+    ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
+
+    if (birdImgReady) {
+        ctx.drawImage(birdImg, -19, -15, 38, 30);
+    } else {
+        ctx.fillStyle = '#f8c830';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, 16, 12, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+// --- Draw pipe ---
+function drawPipe(x, h, isTop, gap, ci) {
+    const img = pipeImgs[(ci||0) % pipeImgs.length];
+    if (!img || !img.complete || !img.naturalWidth) { drawPipeFB(x, h, isTop, gap); return; }
+    const pw = img.naturalWidth, ph = img.naturalHeight;
+    const drawW = PIPE_WIDTH, ratio = drawW / pw;
+    const capW = drawW + 6, cx = x - 3;
+    if (isTop) {
+        const srcY = Math.max(0, ph - h / ratio);
+        const srcH = ph - srcY;
+        ctx.save();
+        ctx.translate(x + drawW, 0);
+        ctx.scale(-1, 1);
+        ctx.drawImage(img, 0, srcY, pw, srcH, 0, 0, drawW, srcH * ratio);
+        ctx.restore();
+    } else {
+        const bodyH = DH - GROUND_H - h;
+        const srcH = Math.min(ph, bodyH / ratio);
+        ctx.drawImage(img, 0, 0, pw, srcH, x, h, drawW, srcH * ratio);
+    }
+}
+function drawPipeFB(x, h, isTop, gap) {
+    const capH = 26, capW = PIPE_WIDTH+6, cx = x-3;
+    if (isTop) {
+        ctx.fillStyle = '#73bf2e'; ctx.fillRect(x, 0, PIPE_WIDTH, h-capH);
+        ctx.fillStyle = '#8fd830'; ctx.fillRect(x+4, 0, 6, h-capH);
+        ctx.fillStyle = '#558b20'; ctx.fillRect(x+PIPE_WIDTH-6, 0, 6, h-capH);
+        ctx.fillStyle = '#73bf2e'; ctx.fillRect(cx, h-capH, capW, capH);
+        ctx.fillStyle = '#8fd830'; ctx.fillRect(cx+3, h-capH+3, 6, capH-6);
+        ctx.fillStyle = '#558b20'; ctx.fillRect(cx+capW-6, h-capH+3, 6, capH-6);
+    } else {
+        const bt = h + capH;
+        ctx.fillStyle = '#73bf2e'; ctx.fillRect(cx, h, capW, capH);
+        ctx.fillStyle = '#8fd830'; ctx.fillRect(cx+3, h+3, 6, capH-6);
+        ctx.fillStyle = '#558b20'; ctx.fillRect(cx+capW-6, h+3, 6, capH-6);
+        ctx.fillStyle = '#73bf2e'; ctx.fillRect(x, bt, PIPE_WIDTH, DH-bt);
+        ctx.fillStyle = '#8fd830'; ctx.fillRect(x+4, bt, 6, DH-bt);
+        ctx.fillStyle = '#558b20'; ctx.fillRect(x+PIPE_WIDTH-6, bt, 6, DH-bt);
+    }
+}
+
+// --- Big score ---
+function drawBigScore(val, x, y) {
+    const str = val.toString();
+    ctx.font = 'bold 40px Arial,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillText(str, x+2, y+2);
+    ctx.strokeStyle = '#543e00'; ctx.lineWidth = 4; ctx.strokeText(str, x, y);
+    ctx.fillStyle = '#fff'; ctx.fillText(str, x, y);
+}
+
+// --- Pause button (in-game) ---
+function drawPauseBtn() {
+    const b = PAUSE_BTN;
+    drawBtn(uiPauseBtn, b.x, b.y, b.w, b.h, 'pause');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.font = '600 9px Fredoka,Arial,sans-serif';
+    ctx.lineWidth = 2; ctx.strokeStyle = '#8b4513'; ctx.lineJoin = 'round';
+    ctx.fillStyle = '#ffe082';
+    ctx.strokeText('暂停', b.x + b.w/2, b.y + b.h + 2);
+    ctx.fillText('暂停', b.x + b.w/2, b.y + b.h + 2);
+}
+
+// --- Paused screen ---
+function drawPaused() {
+    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0, 0, DW, DH);
+
+    // 暂停弹窗背景
+    if (uiPausePopup.complete && uiPausePopup.naturalWidth) {
+        const pw = DW * 0.88, ph = pw * uiPausePopup.naturalHeight / uiPausePopup.naturalWidth;
+        const px = (DW - pw) / 2, py = (DH - ph) / 2 - 20;
+        ctx.drawImage(uiPausePopup, px, py, pw, ph);
+
+        // 关闭按钮 - 弹窗右上角
+        const cw = 28, ch = 28;
+        const cx = px + pw - 29.75, cy = py + 61;
+        drawBtn(uiCloseBtn, cx, cy, cw, ch, 'close');
+        uiBtns.close = { x: cx, y: cy, w: cw, h: ch + 14 };
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.font = '600 10px Fredoka,Arial,sans-serif';
+        ctx.lineWidth = 2; ctx.strokeStyle = '#8b4513'; ctx.lineJoin = 'round';
+        ctx.fillStyle = '#ffe082';
+        ctx.strokeText('关闭', cx + cw/2, cy + ch + 2);
+        ctx.fillText('关闭', cx + cw/2, cy + ch + 2);
+
+        // 返回主页 + 继续 - 弹窗底部
+        const btnW = 85, btnH = 60, btnY = py + ph - 110;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.font = '600 14px Fredoka,Arial,sans-serif';
+        ctx.lineWidth = 3; ctx.strokeStyle = '#8b4513'; ctx.lineJoin = 'round';
+        ctx.fillStyle = '#ffe082';
+        const hx = DW/2 - btnW - 14, hy = btnY;
+        drawBtn(uiHomeBtn, hx, hy, btnW, btnH, 'home');
+        ctx.strokeText('返回主页', hx + btnW/2, hy + btnH + 6);
+        ctx.fillText('返回主页', hx + btnW/2, hy + btnH + 6);
+        uiBtns.home = { x: hx, y: hy, w: btnW, h: btnH + 16 };
+        const rx = DW/2 + 8, ry = btnY;
+        drawBtn(uiRetryBtn, rx, ry, btnW, btnH, 'retry');
+        ctx.strokeText('继续游戏', rx + btnW/2, ry + btnH + 6);
+        ctx.fillText('继续游戏', rx + btnW/2, ry + btnH + 6);
+        uiBtns.retry = { x: rx, y: ry, w: btnW, h: btnH + 16 };
+    }
+}
+
+// --- Countdown overlay ---
+function drawFlying() {
+    const bob = Math.sin(Date.now() / 400) * 0.05 + 1;
+    ctx.save();
+    ctx.translate(DW / 2, DH / 2 + 60);
+    ctx.scale(bob, bob);
+    ctx.font = 'bold 22px Fredoka,Arial,sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = 5; ctx.strokeStyle = '#b84700';
+    ctx.strokeText('点击屏幕开始游戏', 0, 0);
+    ctx.lineWidth = 3; ctx.strokeStyle = '#ffca28';
+    ctx.strokeText('点击屏幕开始游戏', 0, 0);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('点击屏幕开始游戏', 0, 0);
+    ctx.restore();
+}
+
+// --- Ready screen ---
+function drawReady() {
+    // Logo
+    if (uiLogo.complete && uiLogo.naturalWidth) {
+        const lw = DW * 0.65, lh = lw * uiLogo.naturalHeight / uiLogo.naturalWidth;
+        const bob = Math.sin(Date.now()/300)*3;
+        ctx.drawImage(uiLogo, (DW-lw)/2, 40+bob, lw, lh);
+    }
+    // 开始按钮 (呼吸缩放 + 每6秒晃动)
+    if (uiStartBtn.complete && uiStartBtn.naturalWidth) {
+        const pulse = 1 + Math.sin(Date.now()/400)*0.04;
+        const bw = DW * 0.45 * pulse, bh = bw * uiStartBtn.naturalHeight / uiStartBtn.naturalWidth;
+        let bx = (DW-bw)/2, by = DH - 170;
+        // 每6秒摇晃一次（持续400ms）
+        const cycle = Date.now() % 6000;
+        let btnRot = 0;
+        if (cycle < 400) {
+            btnRot = Math.sin(cycle / 400 * Math.PI * 5) * 0.12;
+            ctx.save();
+            ctx.translate(bx + bw/2, by + bh/2);
+            ctx.rotate(btnRot);
+            ctx.translate(-(bx + bw/2), -(by + bh/2));
+        }
+        drawBtn(uiStartBtn, bx, by, bw, bh, 'start');
+        uiBtns.start = { x: bx, y: by, w: bw, h: bh + 22 };
+        // 开始按钮文字
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        ctx.font = '600 14px Fredoka,Arial,sans-serif';
+        ctx.lineWidth = 3; ctx.strokeStyle = '#8b4513'; ctx.lineJoin = 'round';
+        ctx.fillStyle = '#ffe082';
+        ctx.strokeText('开始游戏', bx + bw/2, by + bh + 6);
+        ctx.fillText('开始游戏', bx + bw/2, by + bh + 6);
+        if (cycle < 400) ctx.restore();
+    }
+    // 小鸟自动飞行（位置由 update 控制）
+    drawBird();
+}
+
+// --- Game over screen ---
+function drawGameOver() {
+    ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(0, 0, DW, DH);
+
+    // 结算面板背景图
+    const rw = DW * 0.82, rh = rw * uiResult.naturalHeight / uiResult.naturalWidth;
+    const rx = (DW - rw) / 2, ry = (DH - rh) / 2 - 20;
+    if (uiResult.complete && uiResult.naturalWidth) {
+        ctx.drawImage(uiResult, rx, ry, rw, rh);
+    }
+
+    // 得分文字
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const scoreStr = score.toString();
+    const sy = ry + rh * 0.55;
+    ctx.font = 'bold 38px Fredoka,Arial,sans-serif';
+    ctx.lineJoin = 'round'; ctx.miterLimit = 2;
+    // 外层投影
+    ctx.fillStyle = 'rgba(0,0,0,0.25)';
+    ctx.fillText(scoreStr, DW/2 + 2, sy + 3);
+    // 深色外描边
+    ctx.lineWidth = 7; ctx.strokeStyle = '#b84700';
+    ctx.strokeText(scoreStr, DW/2, sy);
+    // 金黄中描边
+    ctx.lineWidth = 4; ctx.strokeStyle = '#ffca28';
+    ctx.strokeText(scoreStr, DW/2, sy);
+    // 红色填充
+    ctx.fillStyle = '#ff0000';
+    ctx.fillText(scoreStr, DW/2, sy);
+    // 高光叠加
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = '#fff';
+    ctx.fillText(scoreStr, DW/2, sy - 2);
+    ctx.globalAlpha = 1;
+
+    // 返回主页 + 继续按钮
+    const btnW = 85, btnH = 60, btnY = ry + rh - 90;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.font = '600 14px Fredoka,Arial,sans-serif';
+    ctx.lineWidth = 3; ctx.strokeStyle = '#8b4513'; ctx.lineJoin = 'round';
+    ctx.fillStyle = '#ffe082';
+    const hx = DW/2 - btnW - 14, hy = btnY;
+    drawBtn(uiHomeBtn, hx, hy, btnW, btnH, 'home');
+    ctx.strokeText('返回主页', hx + btnW/2, hy + btnH + 6);
+    ctx.fillText('返回主页', hx + btnW/2, hy + btnH + 6);
+    uiBtns.home = { x: hx, y: hy, w: btnW, h: btnH + 16 };
+    const rx2 = DW/2 + 14, ry2 = btnY;
+    drawBtn(uiRetryBtn, rx2, ry2, btnW, btnH, 'retry');
+    ctx.strokeText('重新开始', rx2 + btnW/2, ry2 + btnH + 6);
+    ctx.fillText('重新开始', rx2 + btnW/2, ry2 + btnH + 6);
+    uiBtns.retry = { x: rx2, y: ry2, w: btnW, h: btnH + 16 };
+}
+
+function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.lineTo(x+w-r, y); ctx.quadraticCurveTo(x+w, y, x+w, y+r);
+    ctx.lineTo(x+w, y+h-r); ctx.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+    ctx.lineTo(x+r, y+h); ctx.quadraticCurveTo(x, y+h, x, y+h-r);
+    ctx.lineTo(x, y+r); ctx.quadraticCurveTo(x, y, x+r, y);
+    ctx.closePath();
+}
+
+// --- Game loop (fixed timestep) ---
+function loop(ts) {
+    if (!lastTs) lastTs = ts;
+    let dt = ts - lastTs; lastTs = ts;
+    if (dt > 100) dt = 100; // clamp to avoid spiral
+    accum += dt;
+    while (accum >= TICK) { update(); accum -= TICK; }
+    draw();
+    requestAnimationFrame(loop);
+}
+
+reset();
+requestAnimationFrame(loop);
+loadGameConfig();
+</script>
+</body>
+</html>

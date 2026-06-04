@@ -1,0 +1,14 @@
+{
+  "appId": "cn.cjdlt.app",
+  "appName": "体彩门店互动平台",
+  "webDir": "dist",
+  "server": {
+    "url": "https://192.168.15.236:3367",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

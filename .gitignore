@@ -1,0 +1,62 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+server_debug.log
+server_err.log
+server_out.log
+
+# Dependencies
+node_modules
+
+# Build output
+dist
+dist-ssr
+*.local
+cjdlt-deploy.tar
+
+# Server runtime
+server/db.sqlite
+server/db.sqlite-shm
+server/db.sqlite-wal
+server/db.json
+server/scratch_images/
+server/node_modules/
+server/server.log
+server/server_err.log
+server/certs/
+
+# Uploads (runtime data, not version controlled)
+uploads/
+
+# Temp files
+tmp/
+*_temp_*
+*.tmp
+
+# Android build artifacts
+android/app/build/
+android/.gradle/
+android/.idea/
+android/.kotlin/
+android/build/
+android/capacitor-cordova-android-plugins/build/
+android/local.properties
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+Thumbs.db

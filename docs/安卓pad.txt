@@ -1,0 +1,1156 @@
+AIDA64 for Android v2.19 Report
+
+<<< 系统 >>>
+
+制造商: skythtek
+型号: ZTQM523
+品牌: Veidoo
+主板: exdroid
+设备: ZTQM523
+硬件: sun55iw3p1
+平台: saturn
+产品: ZTQM523
+已安装内存: 4 GB
+总内存: 3768 MB
+可用内存: 2359 MB
+内部存储总量: 54.26 GB
+内部存储剩余: 46.86 GB
+Bluetooth 版本: 4+
+设备特性: android.hardware.audio.output
+android.hardware.biometrics.face
+android.hardware.bluetooth
+android.hardware.bluetooth_le
+android.hardware.camera
+android.hardware.camera.any
+android.hardware.camera.autofocus
+android.hardware.camera.flash
+android.hardware.camera.front
+android.hardware.ethernet
+android.hardware.faketouch
+android.hardware.hardware_keystore
+android.hardware.keystore.app_attest_key
+android.hardware.location
+android.hardware.location.network
+android.hardware.microphone
+android.hardware.opengles.aep
+android.hardware.ram.normal
+android.hardware.screen.landscape
+android.hardware.screen.portrait
+android.hardware.security.model.compatible
+android.hardware.sensor.accelerometer
+android.hardware.sensor.compass
+android.hardware.sensor.gyroscope
+android.hardware.touchscreen
+android.hardware.touchscreen.multitouch
+android.hardware.touchscreen.multitouch.distinct
+android.hardware.touchscreen.multitouch.jazzhand
+android.hardware.usb.accessory
+android.hardware.usb.host
+android.hardware.vulkan.compute
+android.hardware.vulkan.level
+android.hardware.vulkan.version
+android.hardware.wifi
+android.hardware.wifi.direct
+android.hardware.wifi.passpoint
+android.software.activities_on_secondary_displays
+android.software.adoptable_storage
+android.software.app_enumeration
+android.software.app_widgets
+android.software.autofill
+android.software.backup
+android.software.cant_save_state
+android.software.companion_device_setup
+android.software.connectionservice
+android.software.controls
+android.software.cts
+android.software.device_admin
+android.software.device_id_attestation
+android.software.erofs
+android.software.file_based_encryption
+android.software.home_screen
+android.software.incremental_delivery
+android.software.input_methods
+android.software.ipsec_tunnels
+android.software.live_wallpaper
+android.software.managed_users
+android.software.midi
+android.software.opengles.deqp.level
+android.software.picture_in_picture
+android.software.print
+android.software.secure_lock_screen
+android.software.securely_removes_users
+android.software.verified_boot
+android.software.voice_recognizers
+android.software.vulkan.deqp.level
+android.software.webview
+com.google.android.feature.GMSEXPRESS_PLUS_BUILD
+
+<<< 中央处理器 >>>
+
+核心型号: Allwinner A523
+内核架构: 8x ARM Cortex-A55 @ 1800 MHz
+制造工艺: 22 nm
+指令集: 64位 ARMv8-A
+CPU 修订版本: r2p0
+CPU 核心数: 8
+CPU 频率范围: 408 - 1800 MHz
+核心 1 频率: 936 MHz
+核心 2 频率: 936 MHz
+核心 3 频率: 936 MHz
+核心 4 频率: 936 MHz
+核心 5 频率: 840 MHz
+核心 6 频率: 840 MHz
+核心 7 频率: 840 MHz
+核心 8 频率: 840 MHz
+CPU 使用率: 10 %
+支持的 ABI: arm64-v8a, armeabi-v7a, armeabi
+支持的32位 ABI: armeabi-v7a, armeabi
+支持的64位 ABI: arm64-v8a
+AES: 支持
+ASIMD/NEON: 支持
+PMULL: 支持
+SHA1: 支持
+SHA2: 支持
+
+<<< 显示 >>>
+
+主屏分辨率: 1280 × 800
+主屏尺寸: 219 mm × 136 mm
+主屏对角线: 10.15 英寸
+主屏像素密度: 149 dpi (mdpi)
+xdpi / ydpi: 148 / 150 dpi
+GPU 制造商: ARM
+GPU 渲染器: Mali-G57
+GPU 核心数: 1
+刷新率: 60 Hz
+默认方位: 人像
+OpenGL ES 版本: 3.2
+GPU 版本: OpenGL ES 3.2 v1.r40p0-01eac0.d8df1745e280aed441a3b29355c19ab2
+OpenGL ES 扩展: GL_EXT_debug_marker
+GL_ARM_rgba8
+GL_ARM_mali_shader_binary
+GL_OES_depth24
+GL_OES_depth_texture
+GL_OES_depth_texture_cube_map
+GL_OES_packed_depth_stencil
+GL_OES_rgb8_rgba8
+GL_EXT_read_format_bgra
+GL_OES_compressed_paletted_texture
+GL_OES_compressed_ETC1_RGB8_texture
+GL_OES_standard_derivatives
+GL_OES_EGL_image
+GL_OES_EGL_image_external
+GL_OES_EGL_image_external_essl3
+GL_OES_EGL_sync
+GL_OES_texture_npot
+GL_OES_vertex_half_float
+GL_OES_required_internalformat
+GL_OES_vertex_array_object
+GL_OES_mapbuffer
+GL_EXT_texture_format_BGRA8888
+GL_EXT_texture_rg
+GL_EXT_texture_type_2_10_10_10_REV
+GL_OES_fbo_render_mipmap
+GL_OES_element_index_uint
+GL_EXT_shadow_samplers
+GL_OES_texture_compression_astc
+GL_KHR_texture_compression_astc_ldr
+GL_KHR_texture_compression_astc_hdr
+GL_KHR_texture_compression_astc_sliced_3d
+GL_EXT_texture_compression_astc_decode_mode
+GL_EXT_texture_compression_astc_decode_mode_rgb9e5
+GL_KHR_debug
+GL_EXT_occlusion_query_boolean
+GL_EXT_disjoint_timer_query
+GL_EXT_blend_minmax
+GL_EXT_discard_framebuffer
+GL_OES_get_program_binary
+GL_OES_texture_3D
+GL_EXT_texture_storage
+GL_EXT_multisampled_render_to_texture
+GL_EXT_multisampled_render_to_texture2
+GL_OES_surfaceless_context
+GL_OES_texture_stencil8
+GL_EXT_shader_pixel_local_storage
+GL_ARM_shader_framebuffer_fetch
+GL_ARM_shader_framebuffer_fetch_depth_stencil
+GL_ARM_mali_program_binary
+GL_EXT_sRGB
+GL_EXT_sRGB_write_control
+GL_EXT_texture_sRGB_decode
+GL_EXT_texture_sRGB_R8
+GL_EXT_texture_sRGB_RG8
+GL_KHR_blend_equation_advanced
+GL_KHR_blend_equation_advanced_coherent
+GL_OES_texture_storage_multisample_2d_array
+GL_OES_shader_image_atomic
+GL_EXT_robustness
+GL_EXT_draw_buffers_indexed
+GL_OES_draw_buffers_indexed
+GL_EXT_texture_border_clamp
+GL_OES_texture_border_clamp
+GL_EXT_texture_cube_map_array
+GL_OES_texture_cube_map_array
+GL_OES_sample_variables
+GL_OES_sample_shading
+GL_OES_shader_multisample_interpolation
+GL_EXT_shader_io_blocks
+GL_OES_shader_io_blocks
+GL_EXT_tessellation_shader
+GL_OES_tessellation_shader
+GL_EXT_primitive_bounding_box
+GL_OES_primitive_bounding_box
+GL_EXT_geometry_shader
+GL_OES_geometry_shader
+GL_ANDROID_extension_pack_es31a
+GL_EXT_gpu_shader5
+GL_OES_gpu_shader5
+GL_EXT_texture_buffer
+GL_OES_texture_buffer
+GL_EXT_copy_image
+GL_OES_copy_image
+GL_EXT_shader_non_constant_global_initializers
+GL_EXT_color_buffer_half_float
+GL_EXT_unpack_subimage
+GL_EXT_color_buffer_float
+GL_EXT_float_blend
+GL_EXT_YUV_target
+GL_OVR_multiview
+GL_OVR_multiview2
+GL_OVR_multiview_multisampled_render_to_texture
+GL_KHR_robustness
+GL_KHR_robust_buffer_access_behavior
+GL_EXT_draw_elements_base_vertex
+GL_OES_draw_elements_base_vertex
+GL_EXT_protected_textures
+GL_EXT_buffer_storage
+GL_EXT_external_buffer
+GL_EXT_EGL_image_array
+GL_EXT_texture_filter_anisotropic
+GL_OES_texture_float_linear
+GL_ARM_texture_unnormalized_coordinates
+GL_EXT_shader_framebuffer_fetch
+
+<<< 网络 >>>
+
+<< 电话 >>
+电话类型: 无
+
+<< Wi-Fi >>
+状态: 已启用
+SSID: <unknown ssid>
+BSSID: 02:00:00:00:00:00
+隐藏 SSID: 否
+IPv4 地址: 192.168.15.236
+IPv6 地址: fe80::9897:d4ff:fef6:b01a
+信号强度: -47 dBm (非常好)
+链接速度: 154 Mbps
+频率: 5240 MHz
+网关地址: 192.168.15.1
+子网掩码: 255.255.255.0
+DNS1: 218.85.157.99
+DNS2: 8.8.8.8
+DHCP 租约期限: 90 分
+5GHz 频段: 支持
+Wi-Fi Aware: 不支持
+Wi-Fi 连接: 支持
+
+<<< 电池 >>>
+
+电源: USB 接口
+水平: 18 %
+状态: 正在充电
+健康: 良好
+温度: 30.0°C
+电压: 3.567 V
+充电次数: 1069 mAh
+充电剩余时间: 4 小时, 4 分
+容量 (依据系统): 6000 mAh
+
+<<< Android >>>
+
+Android 版本: 13 (Tiramisu)
+API 水平: 33
+Android 安全补丁级别: 2023-06-05
+已 Root 设备: 是
+Android ID: 585516d99039048b
+Build ID: XH_PAD_20251231
+代号: REL
+指纹识别: Veidoo/ZTQM523/ZTQM523:13/TP1A.221005.003/20230609:user/release-keys
+ID: TP1A.221005.003
+Incremental: 20230609
+Java Runtime 版本: Android Runtime 0.9
+Java VM 版本: ART 2.1.0
+Java VM 堆栈大小: 512 MB
+Kernel 架构: aarch64
+Kernel 版本: 5.15.94-android13-8-00001-ga724e892fe05-ab10268991 (build-user@build-host) (Android (8508608, based on r450784e) clang version 14.0.7 (https://android.googlesource.com/toolchain/llvm-project 4c603efb0cca074e9238af8b4106c30add4418f6), LLD 14.0.7) #1 SMP PREEMPT Tue Jun 6 13:16:18 UTC 2023
+Tags: release-keys
+类型: user
+Google Play 服务版本: < 不存在 >
+Huawei Mobile 服务版本: < 不存在 >
+OpenSSL 版本: OpenSSL 1.1.1 (compatible; BoringSSL)
+ZLib 版本: 1.2.11
+ICU CLDR 版本: 40.0
+ICU Library 版本: 70.1
+ICU Unicode 版本: 14.0
+Android 语言: 中文 (简体中文,中国)
+配置的时区: 中国标准时间 (UTC+08:00)
+已运行时间: 00:20:30
+
+<<< 设备 >>>
+
+<< 后相机 >>
+分辨率: 13 MP (4224 × 3136)
+焦距: 3.04 mm
+聚焦模式: infinity, auto
+视频防抖: 不支持
+缩放: 支持
+自动曝光锁定: 不支持
+自动白平衡锁定: 不支持
+闪光灯: 支持
+
+<< 前相机 >>
+分辨率: 5.0 MP (2592 × 1944)
+焦距: 3.04 mm
+聚焦模式: fixed, infinity
+视频防抖: 不支持
+缩放: 不支持
+自动曝光锁定: 不支持
+自动白平衡锁定: 不支持
+闪光灯: 不支持
+
+<< USB 设备 - Linux 5.15.94-android13-8-00001-ga724e892fe05-ab10268991 xhci-hcd xHCI Host Controller >>
+制造商: Linux 5.15.94-android13-8-00001-ga724e892fe05-ab10268991 xhci-hcd
+产品: xHCI Host Controller
+序列号: xhci-hcd.24.auto
+设备 ID: 1D6B-0002
+设备类别: 09 / 00 (Hi-Speed Hub with single TT)
+设备协议: 01
+修订: 0515
+支持 USB 版本: 2.00
+当前速度: 480 Mbps
+
+<< USB 设备 - Linux 5.15.94-android13-8-00001-ga724e892fe05-ab10268991 xhci-hcd xHCI Host Controller >>
+制造商: Linux 5.15.94-android13-8-00001-ga724e892fe05-ab10268991 xhci-hcd
+产品: xHCI Host Controller
+序列号: xhci-hcd.24.auto
+设备 ID: 1D6B-0003
+设备类别: 09 / 00 (Hub)
+设备协议: 03
+修订: 0515
+支持 USB 版本: 3.10
+当前速度: 10000 Mbps
+
+<< Vulkan 设备 - Mali-G57 >>
+设备名称: Mali-G57
+设备类型: 集成 GPU
+设备 UUID: 21-F8-D7-84-90-2F-B2-5F-96-89-51-AF-B6-CF-BD-75
+设备 ID: 000013B5-90910010
+内存大小: 3858992 KB
+最大 1D 图像大小: 16384
+最大 2D 图像大小: 16384 x 16384
+最大 3D 图像大小: 16384 x 16384 x 16384
+最大 Cube Image Size: 16384 x 16384
+最大 Image Layers: 1024
+最大 Texel Buffer Elements: 268435456
+最大 Uniform Buffer Range: 65536
+Max Storage Buffer Range: 268435456
+Max Push Constants Size: 256 字节
+Max Memory Allocation Count: 16384
+Buffer Image Granularity: 1 字节
+Max Bound Descriptor Sets: 7
+Max Per-Stage Descriptor Samplers: 500000
+Max Per-Stage Descriptor Uniform Buffers: 36
+Max Per-Stage Descriptor Storage Buffers: 500000
+Max Per-Stage Descriptor Sampled Images: 500000
+Max Per-Stage Descriptor Storage Images: 500000
+Max Per-Stage Descriptor Input Attachments: 9
+Max Per-Stage Resources: 500000
+Max Descriptor Set Samplers: 500000
+Max Descriptor Set Uniform Buffers: 216
+Max Descriptor Set Dynamic Uniform Buffers: 32
+Max Descriptor Set Storage Buffers: 500000
+Max Descriptor Set Dynamic Storage Buffers: 32
+Max Descriptor Set Sampled Images: 500000
+Max Descriptor Set Storage Images: 500000
+Max Descriptor Set Input Attachments: 9
+Max Vertex Input Attributes: 32
+Max Vertex Input Bindings: 32
+MaxVertex Input Attribute Offset: 2047
+Max Vertex Input Binding Stride: 2048
+Max Vertex Output Components: 128
+Max Tesselation Generation Level: 64
+Max Tesselation Patch Size: 32
+Max Tesselation Control Per-Vertex Input Components: 128
+Max Tesselation Control Per-Vertex Output Components: 128
+Max Tesselation Control Per-Patch Output Components: 120
+Max Tesselation Control Total Output Components: 4096
+Max Tesselation Evaluation Input Components: 128
+Max Tesselation Evaluation Output Components: 128
+Max Geometry Shader Invocations: 32
+Max Geometry Input Components: 128
+Max Geometry Output Components: 128
+Max Geometry Output Vertices: 256
+Max Geometry Total Output Components: 2048
+Max Fragment Input Components: 128
+Max Fragment Output Attachments: 8
+Max Fragment Combined Output Resources: 1000008
+Max Compute Shared Memory Size: 32 KB
+Max Compute Work Group Invocations: 512
+Max Compute Work Group Size: X: 512, Y: 512, Z: 512
+Subpixel Precision Bits: 8
+Subtexel Precision Bits: 8
+Mipmap Precision Bits: 8
+Max Draw Indexed Index Value: 4294967295
+Max Draw Indirect Count: 1
+Max Sampler LOD Bias: 255.000000
+Max Sampler Anisotropy: 16.000000
+Max Viewports: 1
+Max Viewport Size: 16384 x 16384
+Viewport Bounds Range: -32768.000000 ... 32767.000000
+Min Memory Map Alignment: 64 字节
+Min Texel Buffer Offset Alignment: 64 字节
+Min Uniform Buffer Offset Alignment: 16 字节
+Min Storage Buffer Offset Alignment: 64 字节
+Min / Max Texel Offset: -8 / 7
+Min / Max Texel Gather Offset: -8 / 7
+Min / Max Interpolation Offset: -0.500000 / 0.500000
+Subpixel Interpolation Offset Bits: 4
+Max Framebuffer Size: 16384 x 16384
+Max Framebuffer Layers: 256
+Framebuffer Color Sample Counts: 0x0000000D
+Framebuffer Depth Sample Counts: 0x0000000D
+Framebuffer Stencil Sample Counts: 0x0000000D
+Framebuffer No Attachments Sample Counts: 0x0000001D
+Max Color Attachments: 8
+Sampled Image Color Sample Counts: 0x0000000D
+Sampled Image Integer Sample Counts: 0x0000000D
+Sampled Image Depth Sample Counts: 0x0000000D
+Sampled Image Stencil Sample Counts: 0x0000000D
+Storage Image Sample Counts: 0x00000001
+Max Sample Mask Words: 1
+Timestamp Period: 41.666668 ns
+Discrete Queue Priorities: 2
+Point Size Range: 1.000000 ... 1024.000000
+Line Width Range: 1.000000 ... 1.000000
+Point Size Granularity: 0.062500
+Optimal Buffer Copy Offset Alignment: 64 字节
+Optimal Buffer Copy Row Pitch Alignment: 64 字节
+Non-Coherent Atom Size: 64 字节
+驱动程序版本: 40.0.0
+API 版本: 1.3.225
+Vulkan 库: /system/lib64/libvulkan.so
+Alpha To One: 不支持
+Anisotropic Filtering: 支持
+ASTC LDR Texture Compression: 支持
+BC Texture Compression: 不支持
+Depth Bias Clamping: 支持
+Depth Bounds Tests: 不支持
+Depth Clamping: 支持
+Draw Indirect First Instance: 支持
+Dual Source Blend Operations: 不支持
+ETC2 and EAC Texture Compression: 支持
+Fragment Stores and Atomics: 支持
+Full Draw Index Uint32: 支持
+Geometry Shader: 支持
+Image Cube Array: 支持
+Independent Blend: 支持
+Inherited Queries: 不支持
+Large Points: 支持
+Logic Operations: 不支持
+Multi-Draw Indirect: 不支持
+Multi Viewport: 不支持
+Occlusion Query Precise: 支持
+Pipeline Statistics Query: 不支持
+Point and Wireframe Fill Modes: 不支持
+Robust Buffer Access: 支持
+Sample Rate Shading: 支持
+Shader Clip Distance: 不支持
+Shader Cull Distance: 不支持
+Shader Float64: 不支持
+Shader Image Gather Extended: 支持
+Shader Int16: 支持
+Shader Int64: 支持
+Shader Resource Min LOD: 不支持
+Shader Resource Residency: 不支持
+Shader Sampled Image Array Dynamic Indexing: 支持
+Shader Storage Buffer Array Dynamic Indexing: 支持
+Shader Storage Image Array Dynamic Indexing: 支持
+Shader Storage Image Extended Formats: 支持
+Shader Storage Image Multisample: 不支持
+Shader Storage Image Read Without Format: 支持
+Shader Storage Image Write Without Format: 支持
+Shader Tesselation and Geometry Point Size: 不支持
+Shader Uniform Buffer Array Dynamic Indexing: 支持
+Sparse Binding: 不支持
+Sparse Residency 2 Samples: 不支持
+Sparse Residency 4 Samples: 不支持
+Sparse Residency 8 Samples: 不支持
+Sparse Residency 16 Samples: 不支持
+Sparse Residency Aliased: 不支持
+Sparse Residency Aligned Mip Size: 否
+Sparse Residency Buffer: 不支持
+Sparse Residency Image 2D: 不支持
+Sparse Residency Image 3D: 不支持
+Sparse Residency Non-Resident Strict: 否
+Sparse Residency Standard 2D Block Shape: 否
+Sparse Residency Standard 2D Multisample Block Shape: 否
+Sparse Residency Standard 3D Block Shape: 否
+Standard Sample Locations: 是
+Strict Line Rasterization: 是
+Tesselation Shader: 支持
+Timestamps on All Graphics and Compute Queues: 支持
+Variable Multisample Rate: 不支持
+Vertex Pipeline Stores and Atomics: 不支持
+Wide Lines: 不支持
+设备扩展: VK_KHR_incremental_present
+VK_KHR_shared_presentable_image
+VK_KHR_16bit_storage
+VK_KHR_8bit_storage
+VK_KHR_bind_memory2
+VK_KHR_buffer_device_address
+VK_KHR_create_renderpass2
+VK_KHR_copy_commands2
+VK_KHR_dedicated_allocation
+VK_KHR_depth_stencil_resolve
+VK_KHR_descriptor_update_template
+VK_KHR_device_group
+VK_KHR_driver_properties
+VK_KHR_dynamic_rendering
+VK_EXT_extended_dynamic_state
+VK_EXT_extended_dynamic_state2
+VK_KHR_external_fence
+VK_KHR_external_fence_fd
+VK_KHR_external_memory
+VK_KHR_external_memory_fd
+VK_KHR_external_semaphore
+VK_KHR_external_semaphore_fd
+VK_KHR_format_feature_flags2
+VK_KHR_get_memory_requirements2
+VK_KHR_global_priority
+VK_KHR_image_format_list
+VK_KHR_imageless_framebuffer
+VK_KHR_maintenance1
+VK_KHR_maintenance2
+VK_KHR_maintenance3
+VK_KHR_maintenance4
+VK_KHR_multiview
+VK_KHR_relaxed_block_layout
+VK_KHR_sampler_mirror_clamp_to_edge
+VK_KHR_sampler_ycbcr_conversion
+VK_KHR_separate_depth_stencil_layouts
+VK_KHR_shader_draw_parameters
+VK_KHR_shader_float16_int8
+VK_KHR_shader_float_controls
+VK_KHR_shader_integer_dot_product
+VK_KHR_shader_non_semantic_info
+VK_KHR_shader_subgroup_extended_types
+VK_KHR_spirv_1_4
+VK_KHR_storage_buffer_storage_class
+VK_KHR_timeline_semaphore
+VK_KHR_uniform_buffer_standard_layout
+VK_KHR_variable_pointers
+VK_KHR_vulkan_memory_model
+VK_KHR_zero_initialize_workgroup_memory
+VK_EXT_astc_decode_mode
+VK_EXT_calibrated_timestamps
+VK_EXT_descriptor_indexing
+VK_EXT_fragment_density_map
+VK_EXT_fragment_density_map2
+VK_EXT_global_priority
+VK_EXT_global_priority_query
+VK_EXT_host_query_reset
+VK_EXT_image_robustness
+VK_EXT_index_type_uint8
+VK_EXT_inline_uniform_block
+VK_EXT_line_rasterization
+VK_EXT_load_store_op_none
+VK_EXT_pipeline_creation_cache_control
+VK_EXT_pipeline_creation_feedback
+VK_EXT_primitives_generated_query
+VK_EXT_primitive_topology_list_restart
+VK_EXT_private_data
+VK_EXT_provoking_vertex
+VK_EXT_queue_family_foreign
+VK_EXT_device_memory_report
+VK_ARM_rasterization_order_attachment_access
+VK_EXT_rasterization_order_attachment_access
+VK_EXT_scalar_block_layout
+VK_EXT_separate_stencil_usage
+VK_EXT_subgroup_size_control
+VK_EXT_texture_compression_astc_hdr
+VK_EXT_shader_subgroup_ballot
+VK_EXT_shader_subgroup_vote
+VK_EXT_texel_buffer_alignment
+VK_EXT_transform_feedback
+VK_EXT_external_memory_dma_buf
+VK_EXT_image_drm_format_modifier
+VK_EXT_custom_border_color
+VK_EXT_border_color_swizzle
+VK_ANDROID_external_memory_android_hardware_buffer
+VK_KHR_swapchain
+VK_EXT_multisampled_render_to_single_sampled
+VK_EXT_image_compression_control
+VK_KHR_shader_terminate_invocation
+VK_EXT_shader_demote_to_helper_invocation
+VK_EXT_subpass_merge_feedback
+VK_EXT_rgba10x6_formats
+VK_EXT_4444_formats
+VK_KHR_synchronization2
+VK_EXT_tooling_info
+实例扩展: VK_KHR_surface
+VK_KHR_surface_protected_capabilities
+VK_KHR_android_surface
+VK_EXT_swapchain_colorspace
+VK_KHR_get_surface_capabilities2
+VK_GOOGLE_surfaceless_query
+VK_EXT_debug_report
+VK_KHR_device_group_creation
+VK_KHR_external_fence_capabilities
+VK_KHR_external_memory_capabilities
+VK_KHR_external_semaphore_capabilities
+VK_KHR_get_physical_device_properties2
+
+未找到 OpenCL 设备。
+未找到 CUDA 设备。
+未找到 PCI 设备。
+
+<<< 温度 >>>
+
+cpul_thermal_zone: 42.1°C
+cpub_thermal_zone: 42.6°C
+gpu_thermal_zone: 42.6°C
+npu_thermal_zone: 42.6°C
+ddr_thermal_zone: 43.1°C
+axp2202-battery: 30.0°C
+axp2202-usb: 41.0°C
+电池: 30.0°C
+
+<<< 传感器 >>>
+
+lis7a20 detect Accelerometer: 
+lis7a20 detect Accelerometer uncalibrated: 
+
+<<< 应用 >>>
+
+AIDA64: com.finalwire.aida64(v2.19)
+
+<<< 编解码器 >>>
+
+c2.android.aac.decoder: audio/mp4a-latm
+OMX.google.aac.decoder: audio/mp4a-latm
+c2.android.aac.encoder: audio/mp4a-latm
+OMX.google.aac.encoder: audio/mp4a-latm
+c2.android.amrnb.decoder: audio/3gpp
+OMX.google.amrnb.decoder: audio/3gpp
+c2.android.amrnb.encoder: audio/3gpp
+OMX.google.amrnb.encoder: audio/3gpp
+c2.android.amrwb.decoder: audio/amr-wb
+OMX.google.amrwb.decoder: audio/amr-wb
+c2.android.amrwb.encoder: audio/amr-wb
+OMX.google.amrwb.encoder: audio/amr-wb
+c2.android.flac.decoder: audio/flac
+OMX.google.flac.decoder: audio/flac
+c2.android.flac.encoder: audio/flac
+OMX.google.flac.encoder: audio/flac
+c2.android.g711.alaw.decoder: audio/g711-alaw
+OMX.google.g711.alaw.decoder: audio/g711-alaw
+c2.android.g711.mlaw.decoder: audio/g711-mlaw
+OMX.google.g711.mlaw.decoder: audio/g711-mlaw
+c2.android.mp3.decoder: audio/mpeg
+OMX.google.mp3.decoder: audio/mpeg
+c2.android.opus.decoder: audio/opus
+OMX.google.opus.decoder: audio/opus
+c2.android.opus.encoder: audio/opus
+c2.android.raw.decoder: audio/raw
+OMX.google.raw.decoder: audio/raw
+c2.android.vorbis.decoder: audio/vorbis
+OMX.google.vorbis.decoder: audio/vorbis
+c2.allwinner.avc.decoder: video/avc
+c2.allwinner.avc.encoder: video/avc
+c2.allwinner.h263.decoder: video/3gpp
+c2.allwinner.hevc.decoder: video/hevc
+c2.allwinner.mjpeg.decoder: video/x-motion-jpeg
+c2.allwinner.mpeg1.decoder: video/mpeg1
+c2.allwinner.mpeg2.decoder: video/mpeg2
+c2.allwinner.mpeg4.decoder: video/mp4v-es
+c2.allwinner.s263.decoder: video/flv1
+c2.allwinner.vp8.decoder: video/x-vnd.on2.vp8
+c2.allwinner.vp9.decoder: video/x-vnd.on2.vp9
+c2.allwinner.xvid.decoder: video/xvid
+c2.android.avc.decoder: video/avc
+OMX.google.h264.decoder: video/avc
+c2.android.avc.encoder: video/avc
+OMX.google.h264.encoder: video/avc
+c2.android.h263.decoder: video/3gpp
+OMX.google.h263.decoder: video/3gpp
+c2.android.h263.encoder: video/3gpp
+OMX.google.h263.encoder: video/3gpp
+c2.android.hevc.decoder: video/hevc
+OMX.google.hevc.decoder: video/hevc
+c2.android.mpeg4.decoder: video/mp4v-es
+OMX.google.mpeg4.decoder: video/mp4v-es
+c2.android.mpeg4.encoder: video/mp4v-es
+OMX.google.mpeg4.encoder: video/mp4v-es
+c2.android.vp8.decoder: video/x-vnd.on2.vp8
+OMX.google.vp8.decoder: video/x-vnd.on2.vp8
+c2.android.vp8.encoder: video/x-vnd.on2.vp8
+OMX.google.vp8.encoder: video/x-vnd.on2.vp8
+c2.android.vp9.decoder: video/x-vnd.on2.vp9
+OMX.google.vp9.decoder: video/x-vnd.on2.vp9
+
+<<< 目录 >>>
+
+数据: /data
+Root: /system
+Java: /apex/com.android.art
+下载/缓存内容: /data/cache
+
+<< 外部存储 >>
+外部主存储: /storage/emulated/0
+外部文件 #1: /storage/emulated/0/Android/data/com.finalwire.aida64/files
+闹铃: /storage/emulated/0/Alarms
+DCIM: /storage/emulated/0/DCIM
+文档: /storage/emulated/0/Documents
+下载: /storage/emulated/0/Download
+影片: /storage/emulated/0/Movies
+音乐: /storage/emulated/0/Music
+通知: /storage/emulated/0/Notifications
+图片: /storage/emulated/0/Pictures
+播客: /storage/emulated/0/Podcasts
+铃声: /storage/emulated/0/Ringtones
+
+<< 挂载点 >>
+/: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/dev: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/dev/pts: 设备: devpts
+文件系统: devpts
+可读写
+/dev/blkio: 设备: none
+文件系统: cgroup
+可读写
+/dev/cpuctl: 设备: none
+文件系统: cgroup
+可读写
+/dev/cpuset: 设备: none
+文件系统: cgroup
+可读写
+/dev/memcg: 设备: none
+文件系统: cgroup
+可读写
+/dev/binderfs: 设备: binder
+文件系统: binder
+可读写
+/dev/usb-ffs/adb: 设备: adb
+文件系统: functionfs
+可读写
+/dev/usb-ffs/mtp: 设备: mtp
+文件系统: functionfs
+可读写
+/dev/usb-ffs/ptp: 设备: ptp
+文件系统: functionfs
+可读写
+/proc: 设备: proc
+文件系统: proc
+可读写
+/sys: 设备: sysfs
+文件系统: sysfs
+可读写
+/sys/fs/selinux: 设备: selinuxfs
+文件系统: selinuxfs
+可读写
+/sys/fs/cgroup: 设备: none
+文件系统: cgroup2
+可读写
+/sys/kernel/tracing: 设备: tracefs
+文件系统: tracefs
+可读写
+/sys/kernel/debug: 设备: debugfs
+文件系统: debugfs
+可读写
+/sys/kernel/debug/tracing: 设备: tracefs
+文件系统: tracefs
+可读写
+/sys/fs/fuse/connections: 设备: none
+文件系统: fusectl
+可读写
+/sys/fs/bpf: 设备: bpf
+文件系统: bpf
+可读写
+/sys/fs/pstore: 设备: pstore
+文件系统: pstore
+可读写
+/mnt: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/mnt/installer: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/mnt/installer/0/emulated: 设备: /dev/fuse
+文件系统: fuse
+可读写
+/mnt/installer/0/emulated/0/Android/data: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/mnt/installer/0/emulated/0/Android/obb: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/mnt/androidwritable: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/mnt/androidwritable/0/emulated: 设备: /dev/fuse
+文件系统: fuse
+可读写
+/mnt/androidwritable/0/emulated/0/Android/data: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/mnt/androidwritable/0/emulated/0/Android/obb: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/mnt/user/0/emulated: 设备: /dev/fuse
+文件系统: fuse
+可读写
+/mnt/user/0/emulated/0/Android/data: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/mnt/user/0/emulated/0/Android/obb: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/mnt/pass_through/0/emulated: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/metadata: 设备: /dev/block/by-name/metadata
+文件系统: ext4
+可读写
+/system_dlkm: 设备: /dev/block/dm-4
+文件系统: ext4
+只读
+/vendor: 设备: /dev/block/dm-1
+文件系统: erofs
+只读
+/vendor_dlkm: 设备: /dev/block/dm-3
+文件系统: erofs
+只读
+/product: 设备: /dev/block/dm-2
+文件系统: erofs
+只读
+/treadahead: 设备: /dev/block/by-name/treadahead
+文件系统: ext4
+可读写
+/oem: 设备: /dev/block/by-name/media_data
+文件系统: vfat
+只读
+/apex: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/apex/com.android.adbd: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.adservices: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.appsearch: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.art: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.btservices: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.conscrypt: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.extservices: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.i18n: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.ipsec: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.media: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.media.swcodec: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.mediaprovider: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.neuralnetworks: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.ondevicepersonalization: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.os.statsd: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.permission: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.resolv: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.runtime: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.scheduling: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.sdkext: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.tethering: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.tzdata: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.uwb: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.vndk.v33: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/apex/com.android.wifi: 设备: /dev/block/dm-5
+文件系统: erofs
+只读
+/linkerconfig: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/linkerconfig: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/config: 设备: none
+文件系统: configfs
+可读写
+/data: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data/user/0: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/data_mirror/data_ce/null: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror/data_ce/null/0: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror/data_de/null: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror/misc_ce/null: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror/misc_de/null: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror/cur_profiles: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data_mirror/ref_profiles: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/storage: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/storage/emulated: 设备: /dev/fuse
+文件系统: fuse
+可读写
+/storage/emulated/0/Android/data: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/storage/emulated/0/Android/obb: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data/data: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/data/user: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/data/user_de: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/data/user_de/0/com.finalwire.aida64: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data/data/com.finalwire.aida64: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data/misc/profiles/cur: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/data/misc/profiles/ref: 设备: tmpfs
+文件系统: tmpfs
+可读写
+/data/misc/profiles/cur/0/com.finalwire.aida64: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+/data/misc/profiles/ref/com.finalwire.aida64: 设备: /dev/block/dm-6
+文件系统: f2fs
+可读写
+
+<<< 系统文件 >>>
+
+内存碎片信息: /proc/buddyinfo
+Build 属性: /system/build.prop
+软硬件设备: /proc/devices
+命令行: /proc/cmdline
+CPU 信息: /proc/cpuinfo
+可执行区域: /proc/execdomains
+文件系统: /proc/filesystems
+帧缓冲设备: /proc/fb
+Hosts: /system/etc/hosts
+中断信息: /proc/interrupts
+输入设备: /proc/bus/input/devices
+I/O 端口: /proc/ioports
+Kernel 版本: /proc/version
+CPU 平均负荷: /proc/loadavg
+文件加锁信息: /proc/locks
+内存使用信息: /proc/meminfo
+内存映像: /proc/iomem
+其它驱动: /proc/misc
+分区信息: /proc/partitions
+PCI 设备: /proc/bus/pci/devices
+内存 Slab 信息: /proc/slabinfo
+CPU 活动信息: /proc/stat
+交换空间: /proc/swaps
+
+<<< /proc/cpuinfo >>>
+
+processor	: 0
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 1
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 2
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 3
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 4
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 5
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 6
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+processor	: 7
+BogoMIPS	: 48.00
+Features	: fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm lrcpc dcpop asimddp
+CPU implementer	: 0x41
+CPU architecture: 8
+CPU variant	: 0x2
+CPU part	: 0xd05
+CPU revision	: 0
+
+
+<<< /proc/meminfo >>>
+
+MemTotal:        3858992 kB
+MemFree:         1325028 kB
+MemAvailable:    2451696 kB
+Buffers:            2268 kB
+Cached:          1081440 kB
+SwapCached:            0 kB
+Active:           268392 kB
+Inactive:        1560624 kB
+Active(anon):       1176 kB
+Inactive(anon):   751404 kB
+Active(file):     267216 kB
+Inactive(file):   809220 kB
+Unevictable:        3880 kB
+Mlocked:            3880 kB
+SwapTotal:       2894240 kB
+SwapFree:        2894240 kB
+Dirty:               312 kB
+Writeback:             0 kB
+AnonPages:        749208 kB
+Mapped:           644728 kB
+Shmem:              4404 kB
+KReclaimable:     129076 kB
+Slab:             209528 kB
+SReclaimable:      81952 kB
+SUnreclaim:       127576 kB
+KernelStack:       23344 kB
+ShadowCallStack:    5868 kB
+PageTables:        42408 kB
+NFS_Unstable:          0 kB
+Bounce:                0 kB
+WritebackTmp:          0 kB
+CommitLimit:     4823736 kB
+Committed_AS:   70515280 kB
+VmallocTotal:   259653632 kB
+VmallocUsed:       81672 kB
+VmallocChunk:          0 kB
+Percpu:             7584 kB
+AnonHugePages:         0 kB
+ShmemHugePages:        0 kB
+ShmemPmdMapped:        0 kB
+FileHugePages:         0 kB
+FilePmdMapped:         0 kB
+CmaTotal:           8192 kB
+CmaFree:               0 kB
+DmaHeap:           67536 kB
+
+<<< Comment >>>
+
+Enter your comment here:
+

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案C - 全省/全市看板</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; background:#0a1628; color:#e2e8f0; height:100vh; overflow:hidden; }
+
+  .layout { display:flex; height:100vh; }
+
+  /* === SIDEBAR (same as version-c) === */
+  .sidebar { width:240px; background:#1e3a5f; color:#94b3d6; display:flex; flex-direction:column; flex-shrink:0; }
+  .sidebar-header { padding:28px 24px 24px; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .sidebar-header h1 { color:#fff; font-size:17px; font-weight:600; }
+  .sidebar-header p { font-size:11px; color:#5e8ab5; margin-top:3px; }
+  .sidebar-nav { flex:1; overflow-y:auto; padding:8px 12px; }
+  .sidebar-group { margin-bottom:8px; }
+  .sidebar-group-title { padding:12px 12px 6px; font-size:10px; font-weight:600; color:#4e7da8; letter-spacing:2px; }
+  .sidebar-item { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:8px; cursor:pointer; transition:all 0.2s; font-size:13px; color:#7ea3c8; }
+  .sidebar-item:hover { background:rgba(255,255,255,0.06); color:#b8d4ee; }
+  .sidebar-item.active { background:rgba(96,165,250,0.18); color:#93c5fd; }
+  .sidebar-item .icon { width:18px; height:18px; flex-shrink:0; }
+  .sidebar-item .badge-count { margin-left:auto; background:rgba(239,68,68,0.2); color:#f87171; font-size:10px; padding:1px 6px; border-radius:10px; font-weight:600; }
+  .sidebar-sub { margin-left:28px; }
+  .sidebar-sub .sidebar-item { font-size:12px; padding:6px 12px; color:#5e8ab5; }
+  .sidebar-footer { padding:16px 20px; border-top:1px solid rgba(255,255,255,0.05); display:flex; align-items:center; gap:10px; }
+  .sidebar-avatar { width:34px; height:34px; border-radius:50%; background:#2a5080; display:flex; align-items:center; justify-content:center; color:#93c5fd; font-size:13px; font-weight:600; }
+  .sidebar-user-name { font-size:13px; color:#c8ddef; }
+  .sidebar-user-role { font-size:11px; color:#4e7da8; }
+
+  /* === MAIN KANBAN === */
+  .main { flex:1; display:flex; flex-direction:column; overflow:hidden; background:linear-gradient(180deg,#0a1628 0%,#0e1d38 100%); }
+  .topbar { padding:0 28px; height:52px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(59,130,246,0.08); flex-shrink:0; }
+  .topbar-left { display:flex; align-items:center; gap:16px; }
+  .topbar-title { font-size:16px; font-weight:700; color:#e2e8f0; display:flex; align-items:center; gap:8px; }
+  .topbar-tabs { display:flex; gap:2px; background:rgba(59,130,246,0.08); border-radius:8px; padding:3px; }
+  .topbar-tab { padding:5px 16px; font-size:12px; font-weight:500; color:#4e7da8; border-radius:6px; cursor:pointer; transition:all 0.15s; }
+  .topbar-tab.active { background:rgba(59,130,246,0.2); color:#93c5fd; }
+  .topbar-tab:hover:not(.active) { color:#7ea3c8; }
+  .topbar-right { display:flex; align-items:center; gap:12px; font-size:12px; color:#4e7da8; }
+  .topbar-clock { font-variant-numeric:tabular-nums; font-size:13px; color:#5e8ab5; }
+  .topbar-fullscreen { width:32px; height:32px; border-radius:6px; background:rgba(59,130,246,0.08); border:1px solid rgba(59,130,246,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; color:#5e8ab5; transition:all 0.15s; }
+  .topbar-fullscreen:hover { background:rgba(59,130,246,0.15); color:#93c5fd; }
+
+  .kanban-grid { flex:1; display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:auto 1fr 1fr; gap:14px; padding:20px 28px 20px; overflow:hidden; }
+
+  /* Row 1: Summary stats spanning full width */
+  .stats-bar { grid-column:1/-1; display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+
+  /* Panels */
+  .panel { background:rgba(17,29,53,0.8); border:1px solid rgba(59,130,246,0.08); border-radius:12px; display:flex; flex-direction:column; overflow:hidden; }
+  .panel-header { padding:14px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(59,130,246,0.06); flex-shrink:0; }
+  .panel-title { font-size:13px; font-weight:600; color:#94b3d6; display:flex; align-items:center; gap:6px; }
+  .panel-title .dot { width:6px; height:6px; border-radius:50%; background:#3b82f6; }
+  .panel-body { padding:14px 18px; flex:1; overflow-y:auto; }
+
+  /* Stat mini card */
+  .stat-mini { background:rgba(17,29,53,0.6); border:1px solid rgba(59,130,246,0.08); border-radius:10px; padding:16px; text-align:center; }
+  .stat-mini-label { font-size:11px; color:#4e7da8; margin-bottom:6px; }
+  .stat-mini-value { font-size:26px; font-weight:700; color:#e2e8f0; }
+  .stat-mini-change { font-size:10px; margin-top:4px; }
+  .stat-mini-change.up { color:#4ade80; }
+  .stat-mini-change.down { color:#f87171; }
+
+  /* City cards */
+  .city-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .city-card { background:rgba(30,58,95,0.3); border:1px solid rgba(59,130,246,0.06); border-radius:8px; padding:12px; transition:all 0.15s; cursor:pointer; }
+  .city-card:hover { border-color:rgba(59,130,246,0.15); background:rgba(30,58,95,0.5); }
+  .city-card.selected { border-color:rgba(59,130,246,0.3); background:rgba(59,130,246,0.08); }
+  .city-name { font-size:13px; font-weight:600; color:#c8ddef; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+  .city-name .badge-sm { font-size:10px; padding:1px 6px; border-radius:4px; font-weight:500; }
+  .city-stats { display:flex; gap:12px; }
+  .city-stat-item { font-size:11px; color:#4e7da8; }
+  .city-stat-item span { color:#94b3d6; font-weight:600; }
+  .city-bar { height:3px; background:rgba(59,130,246,0.1); border-radius:2px; margin-top:8px; overflow:hidden; }
+  .city-bar-fill { height:100%; border-radius:2px; transition:width 0.5s; }
+  .city-bar-fill.high { background:#4ade80; }
+  .city-bar-fill.mid { background:#fbbf24; }
+  .city-bar-fill.low { background:#f87171; }
+
+  /* Store status list */
+  .store-kanban-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid rgba(59,130,246,0.04); font-size:12px; }
+  .store-kanban-item:last-child { border-bottom:none; }
+  .store-kanban-name { flex:1; color:#94b3d6; }
+  .store-kanban-page { color:#3d6080; font-size:11px; max-width:80px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .store-kanban-time { color:#3d6080; font-size:10px; width:50px; text-align:right; }
+
+  .status-dot { width:6px; height:6px; border-radius:50%; display:inline-block; flex-shrink:0; }
+  .status-dot.on { background:#4ade80; box-shadow:0 0 4px rgba(74,222,128,0.4); }
+  .status-dot.off { background:#4a6080; }
+
+  /* Channel distribution */
+  .channel-row { display:flex; align-items:center; gap:12px; padding:10px 0; border-bottom:1px solid rgba(59,130,246,0.04); }
+  .channel-row:last-child { border-bottom:none; }
+  .channel-label { font-size:12px; color:#94b3d6; width:80px; }
+  .channel-bar { flex:1; height:8px; background:rgba(59,130,246,0.08); border-radius:4px; overflow:hidden; }
+  .channel-bar-fill { height:100%; border-radius:4px; transition:width 0.5s; }
+  .channel-count { font-size:12px; color:#4e7da8; width:40px; text-align:right; }
+
+  /* Activity timeline */
+  .activity-kanban-item { display:flex; gap:8px; padding:6px 0; font-size:11px; border-bottom:1px solid rgba(59,130,246,0.03); }
+  .activity-kanban-item:last-child { border-bottom:none; }
+  .activity-kanban-dot { width:6px; height:6px; border-radius:50%; margin-top:4px; flex-shrink:0; }
+  .activity-kanban-time { color:#3d6080; font-size:10px; white-space:nowrap; width:36px; flex-shrink:0; }
+  .activity-kanban-text { color:#7ea3c8; }
+  .activity-kanban-text strong { color:#94b3d6; }
+
+  /* Mini sparkline */
+  .sparkline { display:flex; align-items:flex-end; gap:1px; height:32px; }
+  .sparkline .bar { width:3px; border-radius:1.5px 1.5px 0 0; background:rgba(59,130,246,0.3); }
+  .sparkline .bar:last-child { background:#3b82f6; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar (same as v-c) -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h1>体彩信息发布终端管理系统</h1>
+      <p>Administration Panel v2.0</p>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">运营管理</div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          概览面板
+        </div>
+        <div class="sidebar-item active">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          数据看板
+          <span class="badge-count">NEW</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          门店管理
+          <span class="badge-count">48</span>
+        </div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          公告管理
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">内容管理</div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          喜报中心
+        </div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+          素材管理
+        </div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          信源监控
+        </div>
+      </div>
+      <div class="sidebar-group">
+        <div class="sidebar-group-title">系统运维</div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          远程控制
+        </div>
+        <div class="sidebar-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          系统设置
+        </div>
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-avatar">管</div>
+      <div>
+        <div class="sidebar-user-name">系统管理员</div>
+        <div class="sidebar-user-role">超级管理员</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Kanban -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <div class="topbar-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 002 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+          数据看板
+        </div>
+        <div class="topbar-tabs">
+          <div class="topbar-tab active">全省总览</div>
+          <div class="topbar-tab">福州市</div>
+          <div class="topbar-tab">厦门市</div>
+          <div class="topbar-tab">泉州市</div>
+          <div class="topbar-tab">莆田市</div>
+          <div class="topbar-tab">更多 ▾</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="topbar-clock">2026-04-17 09:32:18</div>
+        <div class="topbar-fullscreen" title="全屏">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="kanban-grid">
+      <!-- Row 1: Stats Summary -->
+      <div class="stats-bar">
+        <div class="stat-mini">
+          <div class="stat-mini-label">托管门店总数</div>
+          <div class="stat-mini-value">48</div>
+          <div class="stat-mini-change up">+3 本月</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">在线设备</div>
+          <div class="stat-mini-value" style="color:#4ade80;">42</div>
+          <div class="stat-mini-change" style="color:#4e7da8;">87.5% 在线率</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">离线设备</div>
+          <div class="stat-mini-value" style="color:#f87171;">6</div>
+          <div class="stat-mini-change down">2台>30分钟</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">今日点击量</div>
+          <div class="stat-mini-value">1,247</div>
+          <div class="stat-mini-change up">+12.3%</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">今日分享量</div>
+          <div class="stat-mini-value">86</div>
+          <div class="stat-mini-change down">-5.1%</div>
+        </div>
+        <div class="stat-mini">
+          <div class="stat-mini-label">今日开奖更新</div>
+          <div class="stat-mini-value" style="color:#fbbf24;">3</div>
+          <div class="stat-mini-change" style="color:#4e7da8;">下次 21:25</div>
+        </div>
+      </div>
+
+      <!-- Row 2 Left: City Overview -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="dot"></span>各地市门店状态</div>
+          <div style="font-size:11px;color:#3d6080;">共9地市</div>
+        </div>
+        <div class="panel-body">
+          <div class="city-grid">
+            <div class="city-card selected">
+              <div class="city-name">
+                福州市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">12家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">11</span></div>
+                <div class="city-stat-item">离线 <span style="color:#f87171;">1</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill high" style="width:91.7%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                厦门市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">8家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">7</span></div>
+                <div class="city-stat-item">离线 <span style="color:#f87171;">1</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill high" style="width:87.5%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                泉州市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">7家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">6</span></div>
+                <div class="city-stat-item">离线 <span style="color:#f87171;">1</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill high" style="width:85.7%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                莆田市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">5家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">5</span></div>
+                <div class="city-stat-item">离线 <span style="color:#4a6080;">0</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill high" style="width:100%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                漳州市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">4家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">3</span></div>
+                <div class="city-stat-item">暂停 <span style="color:#fbbf24;">1</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill mid" style="width:75%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                龙岩市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">3家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">3</span></div>
+                <div class="city-stat-item">离线 <span style="color:#4a6080;">0</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill high" style="width:100%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                三明市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">4家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">3</span></div>
+                <div class="city-stat-item">离线 <span style="color:#f87171;">1</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill mid" style="width:75%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                南平市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">3家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">2</span></div>
+                <div class="city-stat-item">离线 <span style="color:#f87171;">1</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill mid" style="width:66.7%"></div></div>
+            </div>
+            <div class="city-card">
+              <div class="city-name">
+                宁德市
+                <span class="badge-sm" style="background:rgba(59,130,246,0.15);color:#60a5fa;">2家</span>
+              </div>
+              <div class="city-stats">
+                <div class="city-stat-item">在线 <span style="color:#4ade80;">2</span></div>
+                <div class="city-stat-item">离线 <span style="color:#4a6080;">0</span></div>
+              </div>
+              <div class="city-bar"><div class="city-bar-fill high" style="width:100%"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 Middle: Channel Distribution + Trend -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="dot"></span>渠道与趋势</div>
+        </div>
+        <div class="panel-body" style="display:flex;flex-direction:column;gap:16px;">
+          <!-- Channel Distribution -->
+          <div>
+            <div style="font-size:11px;color:#4e7da8;margin-bottom:8px;">渠道分布</div>
+            <div class="channel-row">
+              <div class="channel-label">TV 电视盒子</div>
+              <div class="channel-bar"><div class="channel-bar-fill" style="width:72.9%;background:#3b82f6;"></div></div>
+              <div class="channel-count">35</div>
+            </div>
+            <div class="channel-row">
+              <div class="channel-label">Android</div>
+              <div class="channel-bar"><div class="channel-bar-fill" style="width:20.8%;background:#8b5cf6;"></div></div>
+              <div class="channel-count">10</div>
+            </div>
+            <div class="channel-row">
+              <div class="channel-label">公告渠道</div>
+              <div class="channel-bar"><div class="channel-bar-fill" style="width:6.3%;background:#f59e0b;"></div></div>
+              <div class="channel-count">3</div>
+            </div>
+          </div>
+
+          <!-- Click Trend -->
+          <div>
+            <div style="font-size:11px;color:#4e7da8;margin-bottom:8px;">今日点击趋势</div>
+            <div class="sparkline">
+              <div class="bar" style="height:25%"></div>
+              <div class="bar" style="height:35%"></div>
+              <div class="bar" style="height:30%"></div>
+              <div class="bar" style="height:50%"></div>
+              <div class="bar" style="height:45%"></div>
+              <div class="bar" style="height:55%"></div>
+              <div class="bar" style="height:60%"></div>
+              <div class="bar" style="height:65%"></div>
+              <div class="bar" style="height:70%"></div>
+              <div class="bar" style="height:75%"></div>
+              <div class="bar" style="height:72%"></div>
+              <div class="bar" style="height:80%"></div>
+              <div class="bar" style="height:78%"></div>
+              <div class="bar" style="height:85%"></div>
+              <div class="bar" style="height:82%"></div>
+              <div class="bar" style="height:90%"></div>
+              <div class="bar" style="height:88%"></div>
+              <div class="bar" style="height:92%"></div>
+              <div class="bar" style="height:95%"></div>
+              <div class="bar" style="height:100%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:#3d6080;margin-top:6px;">
+              <span>08:00</span><span>10:00</span><span>12:00</span><span>14:00</span><span>16:00</span><span>现在</span>
+            </div>
+          </div>
+
+          <!-- Online Rate Trend -->
+          <div>
+            <div style="font-size:11px;color:#4e7da8;margin-bottom:8px;">在线率（近7天）</div>
+            <div class="sparkline">
+              <div class="bar" style="height:85%;background:rgba(74,222,128,0.4)"></div>
+              <div class="bar" style="height:82%;background:rgba(74,222,128,0.4)"></div>
+              <div class="bar" style="height:88%;background:rgba(74,222,128,0.4)"></div>
+              <div class="bar" style="height:90%;background:rgba(74,222,128,0.4)"></div>
+              <div class="bar" style="height:83%;background:rgba(74,222,128,0.4)"></div>
+              <div class="bar" style="height:86%;background:rgba(74,222,128,0.4)"></div>
+              <div class="bar" style="height:87.5%;background:#4ade80"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;color:#3d6080;margin-top:6px;">
+              <span>4/11</span><span>4/12</span><span>4/13</span><span>4/14</span><span>4/15</span><span>4/16</span><span>今天</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2 Right: Online Store List -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="dot"></span>实时门店状态</div>
+          <div style="font-size:11px;color:#4ade80;">● 42 在线</div>
+        </div>
+        <div class="panel-body" style="font-size:12px;">
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">福州鼓楼旗舰店</span>
+            <span class="store-kanban-page">默认主页</span>
+            <span class="store-kanban-time">5秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">厦门思明体彩站</span>
+            <span class="store-kanban-page">VIP风格</span>
+            <span class="store-kanban-time">8秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">莆田城厢体彩站</span>
+            <span class="store-kanban-page">默认主页</span>
+            <span class="store-kanban-time">12秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">龙岩新罗旗舰店</span>
+            <span class="store-kanban-page">国潮风</span>
+            <span class="store-kanban-time">3秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">三明三元销售点</span>
+            <span class="store-kanban-page">默认主页</span>
+            <span class="store-kanban-time">18秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">宁德蕉城体彩站</span>
+            <span class="store-kanban-page">街机风</span>
+            <span class="store-kanban-time">6秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">福州台江销售厅</span>
+            <span class="store-kanban-page">流行风</span>
+            <span class="store-kanban-time">9秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">厦门湖里旗舰店</span>
+            <span class="store-kanban-page">默认主页</span>
+            <span class="store-kanban-time">2秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">泉州晋江体彩站</span>
+            <span class="store-kanban-page">VIP风格</span>
+            <span class="store-kanban-time">15秒前</span>
+          </div>
+          <div class="store-kanban-item">
+            <span class="status-dot on"></span>
+            <span class="store-kanban-name">漳州龙文销售点</span>
+            <span class="store-kanban-page">默认主页</span>
+            <span class="store-kanban-time">22秒前</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 Left: Offline Alerts -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="dot" style="background:#f87171;"></span>离线/异常门店</div>
+          <div style="font-size:11px;color:#f87171;">6 台异常</div>
+        </div>
+        <div class="panel-body">
+          <div class="store-kanban-item" style="padding:10px 0;">
+            <span class="status-dot off"></span>
+            <span class="store-kanban-name">泉州丰泽销售点</span>
+            <span class="store-kanban-time" style="color:#f87171;">2小时</span>
+          </div>
+          <div class="store-kanban-item" style="padding:10px 0;">
+            <span class="status-dot off"></span>
+            <span class="store-kanban-name">南平延平体彩站</span>
+            <span class="store-kanban-time" style="color:#f87171;">45分钟</span>
+          </div>
+          <div class="store-kanban-item" style="padding:10px 0;">
+            <span class="status-dot off"></span>
+            <span class="store-kanban-name">三明沙县销售点</span>
+            <span class="store-kanban-time" style="color:#fbbf24;">15分钟</span>
+          </div>
+          <div class="store-kanban-item" style="padding:10px 0;">
+            <span class="status-dot off"></span>
+            <span class="store-kanban-name">福州仓山体彩站</span>
+            <span class="store-kanban-time" style="color:#fbbf24;">8分钟</span>
+          </div>
+          <div class="store-kanban-item" style="padding:10px 0;">
+            <span class="status-dot off"></span>
+            <span class="store-kanban-name">厦门翔安销售厅</span>
+            <span class="store-kanban-time" style="color:#fbbf24;">5分钟</span>
+          </div>
+          <div style="padding:10px 0;font-size:11px;color:#4e7da8;">
+            <span style="color:#f87171;">●</span> >30分钟 &nbsp;&nbsp;
+            <span style="color:#fbbf24;">●</span> <30分钟 &nbsp;&nbsp;
+            <span style="color:#4a6080;">●</span> 刚断线
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 Middle: Draw Status -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="dot" style="background:#fbbf24;"></span>开奖数据状态</div>
+        </div>
+        <div class="panel-body">
+          <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.1);border-radius:6px;">
+              <div>
+                <div style="font-size:12px;color:#c8ddef;font-weight:500;">超级大乐透</div>
+                <div style="font-size:10px;color:#4e7da8;">第26029期</div>
+              </div>
+              <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(74,222,128,0.12);color:#4ade80;">已更新</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.1);border-radius:6px;">
+              <div>
+                <div style="font-size:12px;color:#c8ddef;font-weight:500;">排列3</div>
+                <div style="font-size:10px;color:#4e7da8;">第26078期</div>
+              </div>
+              <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(74,222,128,0.12);color:#4ade80;">已更新</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.1);border-radius:6px;">
+              <div>
+                <div style="font-size:12px;color:#c8ddef;font-weight:500;">排列5</div>
+                <div style="font-size:10px;color:#4e7da8;">第26078期</div>
+              </div>
+              <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(251,191,36,0.12);color:#fbbf24;">待开奖</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(74,222,128,0.06);border:1px solid rgba(74,222,128,0.1);border-radius:6px;">
+              <div>
+                <div style="font-size:12px;color:#c8ddef;font-weight:500;">七星彩</div>
+                <div style="font-size:10px;color:#4e7da8;">第26029期</div>
+              </div>
+              <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(74,222,128,0.12);color:#4ade80;">已更新</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(251,191,36,0.06);border:1px solid rgba(251,191,36,0.1);border-radius:6px;">
+              <div>
+                <div style="font-size:12px;color:#c8ddef;font-weight:500;">36选7</div>
+                <div style="font-size:10px;color:#4e7da8;">第26029期</div>
+              </div>
+              <span style="font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(251,191,36,0.12);color:#fbbf24;">待开奖</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 3 Right: Activity Timeline -->
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><span class="dot" style="background:#8b5cf6;"></span>实时动态</div>
+        </div>
+        <div class="panel-body">
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#4ade80;"></div>
+            <div class="activity-kanban-text"><strong>福州鼓楼旗舰店</strong> 上线</div>
+            <div class="activity-kanban-time">2分钟前</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#60a5fa;"></div>
+            <div class="activity-kanban-text">手动开奖 <strong>大乐透 第26029期</strong></div>
+            <div class="activity-kanban-time">15分钟前</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#f87171;"></div>
+            <div class="activity-kanban-text"><strong>泉州丰泽销售点</strong> 离线</div>
+            <div class="activity-kanban-time">2小时前</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#4ade80;"></div>
+            <div class="activity-kanban-text">新建门店 <strong>宁德霞浦站</strong></div>
+            <div class="activity-kanban-time">3小时前</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#fbbf24;"></div>
+            <div class="activity-kanban-text">公告 <strong>"5亿大派奖"</strong> 已发布</div>
+            <div class="activity-kanban-time">5小时前</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#8b5cf6;"></div>
+            <div class="activity-kanban-text"><strong>龙岩新罗旗舰店</strong> 切换为国潮风</div>
+            <div class="activity-kanban-time">6小时前</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#60a5fa;"></div>
+            <div class="activity-kanban-text">数据源 <strong>自动刷新</strong> 完成</div>
+            <div class="activity-kanban-time">昨日 21:50</div>
+          </div>
+          <div class="activity-kanban-item">
+            <div class="activity-kanban-dot" style="background:#4ade80;"></div>
+            <div class="activity-kanban-text"><strong>厦门思明体彩站</strong> 上线</div>
+            <div class="activity-kanban-time">昨日 08:02</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

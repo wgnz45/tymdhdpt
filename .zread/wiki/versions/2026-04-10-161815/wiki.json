@@ -1,0 +1,280 @@
+{
+  "id": "2026-04-10-161815",
+  "generated_at": "2026-04-10T08:18:15.6547998Z",
+  "language": "zh",
+  "pages": [
+    {
+      "slug": "1-overview",
+      "title": "Overview",
+      "file": "1-overview.md",
+      "section": "Get Started",
+      "level": "Beginner"
+    },
+    {
+      "slug": "2-quick-start",
+      "title": "Quick Start",
+      "file": "2-quick-start.md",
+      "section": "Get Started",
+      "level": "Beginner"
+    },
+    {
+      "slug": "3-xiang-mu-jie-gou-su-lan-qian-duan-zhan-shi-duan-hou-tai-guan-li-duan-yu-zhua-qu-fu-wu-de-xie-zuo-guan-xi",
+      "title": "项目结构速览：前端展示端、后台管理端与抓取服务的协作关系",
+      "file": "3-xiang-mu-jie-gou-su-lan-qian-duan-zhan-shi-duan-hou-tai-guan-li-duan-yu-zhua-qu-fu-wu-de-xie-zuo-guan-xi.md",
+      "section": "Get Started",
+      "level": "Beginner"
+    },
+    {
+      "slug": "4-ben-di-kai-fa-gong-zuo-liu-vite-qian-duan-diao-shi-node-fu-wu-qi-dong-yu-lian-diao-fang-shi",
+      "title": "本地开发工作流：Vite 前端调试、Node 服务启动与联调方式",
+      "file": "4-ben-di-kai-fa-gong-zuo-liu-vite-qian-duan-diao-shi-node-fu-wu-qi-dong-yu-lian-diao-fang-shi.md",
+      "section": "Get Started",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "5-he-xin-fang-wen-lu-jing-men-dian-qian-tai-tong-hou-tai-yu-duo-men-dian-lu-you-yue-ding",
+      "title": "核心访问路径：门店前台、统一后台与多门店路由约定",
+      "file": "5-he-xin-fang-wen-lu-jing-men-dian-qian-tai-tong-hou-tai-yu-duo-men-dian-lu-you-yue-ding.md",
+      "section": "Get Started",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "6-men-dian-da-ping-shou-ye-ti-yan-kai-jiang-xin-xi-xuan-hao-liu-cheng-yu-gou-piao-dan-sheng-cheng",
+      "title": "门店大屏首页体验：开奖信息、选号流程与购票单生成",
+      "file": "6-men-dian-da-ping-shou-ye-ti-yan-kai-jiang-xin-xi-xuan-hao-liu-cheng-yu-gou-piao-dan-sheng-cheng.md",
+      "section": "Get Started",
+      "group": "从零上手功能体验",
+      "level": "Beginner"
+    },
+    {
+      "slug": "7-gua-gua-le-ye-mian-ti-yan-hu-dong-liu-cheng-piao-mian-zhan-shi-yu-zhuang-tai-qie-huan",
+      "title": "刮刮乐页面体验：互动流程、票面展示与状态切换",
+      "file": "7-gua-gua-le-ye-mian-ti-yan-hu-dong-liu-cheng-piao-mian-zhan-shi-yu-zhuang-tai-qie-huan.md",
+      "section": "Get Started",
+      "group": "从零上手功能体验",
+      "level": "Beginner"
+    },
+    {
+      "slug": "8-hou-tai-ru-kou-ti-yan-gai-lan-nei-rong-guan-li-xi-bao-pei-zhi-yu-jian-kong-ru-kou",
+      "title": "后台入口体验：概览、内容管理、喜报配置与监控入口",
+      "file": "8-hou-tai-ru-kou-ti-yan-gai-lan-nei-rong-guan-li-xi-bao-pei-zhi-yu-jian-kong-ru-kou.md",
+      "section": "Get Started",
+      "group": "从零上手功能体验",
+      "level": "Beginner"
+    },
+    {
+      "slug": "9-huan-jing-yi-lai-shuo-ming-node-qian-duan-yi-lai-fu-wu-duan-yi-lai-yu-chang-jian-jian-rong-dian",
+      "title": "环境依赖说明：Node、前端依赖、服务端依赖与常见兼容点",
+      "file": "9-huan-jing-yi-lai-shuo-ming-node-qian-duan-yi-lai-fu-wu-duan-yi-lai-yu-chang-jian-jian-rong-dian.md",
+      "section": "Get Started",
+      "group": "部署与运行准备",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "10-gou-jian-yu-fa-bu-ji-chu-jing-tai-zi-yuan-gou-jian-fu-wu-duan-jing-tai-tuo-guan-yu-huan-cun-ce-lue-ren-zhi",
+      "title": "构建与发布基础：静态资源构建、服务端静态托管与缓存策略认知",
+      "file": "10-gou-jian-yu-fa-bu-ji-chu-jing-tai-zi-yuan-gou-jian-fu-wu-duan-jing-tai-tuo-guan-yu-huan-cun-ce-lue-ren-zhi.md",
+      "section": "Get Started",
+      "group": "部署与运行准备",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "11-android-capacitor-da-bao-ru-kou-yu-yi-dong-duan-yun-xing-mo-shi-shuo-ming",
+      "title": "Android/Capacitor 打包入口与移动端运行模式说明",
+      "file": "11-android-capacitor-da-bao-ru-kou-yu-yi-dong-duan-yun-xing-mo-shi-shuo-ming.md",
+      "section": "Get Started",
+      "group": "部署与运行准备",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "12-ye-wu-mu-biao-yu-jie-zhi-ding-wei-ti-cai-men-dian-hu-dong-zhan-shi-yu-yun-ying-guan-li-ti-hua",
+      "title": "业务目标与价值定位：体彩门店互动展示与运营管理一体化",
+      "file": "12-ye-wu-mu-biao-yu-jie-zhi-ding-wei-ti-cai-men-dian-hu-dong-zhan-shi-yu-yun-ying-guan-li-ti-hua.md",
+      "section": "Deep Dive",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "13-xi-tong-quan-jing-jia-gou-react-duo-ye-mian-qian-tai-express-api-zhua-qu-ren-wu-ceng",
+      "title": "系统全景架构：React 多页面前台 + Express API + 抓取任务层",
+      "file": "13-xi-tong-quan-jing-jia-gou-react-duo-ye-mian-qian-tai-express-api-zhua-qu-ren-wu-ceng.md",
+      "section": "Deep Dive",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "14-lu-you-ti-xi-she-ji-hashrouter-xia-de-zhu-zhan-hou-tai-yu-duo-zu-hu-men-dian-lu-you",
+      "title": "路由体系设计：HashRouter 下的主站后台与多租户门店路由",
+      "file": "14-lu-you-ti-xi-she-ji-hashrouter-xia-de-zhu-zhan-hou-tai-yu-duo-zu-hu-men-dian-lu-you.md",
+      "section": "Deep Dive",
+      "group": "前端应用设计",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "15-duo-men-dian-cheng-zai-mo-xing-storeid-zuo-yong-yu-xia-de-qian-tai-yu-hou-tai-ge-chi",
+      "title": "多门店承载模型：storeId 作用域下的前台与后台隔离",
+      "file": "15-duo-men-dian-cheng-zai-mo-xing-storeid-zuo-yong-yu-xia-de-qian-tai-yu-hou-tai-ge-chi.md",
+      "section": "Deep Dive",
+      "group": "前端应用设计",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "16-shou-ye-he-xin-zhuang-tai-ji-xuan-hao-ji-xuan-piao-dan-bian-ji-yu-fen-xiang-liu-cheng",
+      "title": "首页核心状态机：选号、机选、票单、编辑与分享流程",
+      "file": "16-shou-ye-he-xin-zhuang-tai-ji-xuan-hao-ji-xuan-piao-dan-bian-ji-yu-fen-xiang-liu-cheng.md",
+      "section": "Deep Dive",
+      "group": "前端应用设计",
+      "level": "Advanced"
+    },
+    {
+      "slug": "17-shu-ju-qu-dong-xuan-ran-kai-jiang-jie-guo-yu-men-dian-pei-zhi-de-la-qu-ying-she-yu-rong-cuo",
+      "title": "数据驱动渲染：开奖结果与门店配置的拉取、映射与容错",
+      "file": "17-shu-ju-qu-dong-xuan-ran-kai-jiang-jie-guo-yu-men-dian-pei-zhi-de-la-qu-ying-she-yu-rong-cuo.md",
+      "section": "Deep Dive",
+      "group": "前端应用设计",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "18-diao-shi-yu-mi-du-mo-shi-ji-zhi-yin-cang-hong-fa-chi-jiu-hua-ce-lue-yu-yi-dong-duan-gua-pei",
+      "title": "调试与密度模式机制：隐藏触发、持久化策略与移动端适配",
+      "file": "18-diao-shi-yu-mi-du-mo-shi-ji-zhi-yin-cang-hong-fa-chi-jiu-hua-ce-lue-yu-yi-dong-duan-gua-pei.md",
+      "section": "Deep Dive",
+      "group": "前端应用设计",
+      "level": "Advanced"
+    },
+    {
+      "slug": "19-portal-feng-ge-ti-xi-duo-shi-jue-mo-ban-ye-mian-yu-gong-xiang-neng-li-de-zu-zhi-fang-shi",
+      "title": "Portal 风格体系：多视觉模板页面与共享能力的组织方式",
+      "file": "19-portal-feng-ge-ti-xi-duo-shi-jue-mo-ban-ye-mian-yu-gong-xiang-neng-li-de-zu-zhi-fang-shi.md",
+      "section": "Deep Dive",
+      "group": "前端应用设计",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "20-hou-tai-kuang-jia-she-ji-cai-dan-fen-ceng-zhu-zhan-te-quan-ye-yu-fen-zhan-deng-lu-jian-quan",
+      "title": "后台框架设计：菜单分层、主站特权页与分站登录鉴权",
+      "file": "20-hou-tai-kuang-jia-she-ji-cai-dan-fen-ceng-zhu-zhan-te-quan-ye-yu-fen-zhan-deng-lu-jian-quan.md",
+      "section": "Deep Dive",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "21-hui-hua-yu-an-quan-kong-zhi-fen-zhan-mi-yao-deng-lu-chao-shi-shi-xiao-yu-huo-dong-zhui-zong",
+      "title": "会话与安全控制：分站密钥登录、超时失效与活动追踪",
+      "file": "21-hui-hua-yu-an-quan-kong-zhi-fen-zhan-mi-yao-deng-lu-chao-shi-shi-xiao-yu-huo-dong-zhui-zong.md",
+      "section": "Deep Dive",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "22-zhua-qu-jian-kong-zhong-xin-xin-yuan-zhuang-tai-li-shi-zhua-qu-pei-zhi-xia-fa-yu-shou-dong-shua-xin",
+      "title": "抓取监控中心：信源状态、历史抓取、配置下发与手动刷新",
+      "file": "22-zhua-qu-jian-kong-zhong-xin-xin-yuan-zhuang-tai-li-shi-zhua-qu-pei-zhi-xia-fa-yu-shou-dong-shua-xin.md",
+      "section": "Deep Dive",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "23-nei-rong-yun-ying-mo-kuai-men-dian-pei-zhi-xi-bao-pei-zhi-bu-ju-su-cai-yu-yun-shi-guan-li",
+      "title": "内容运营模块：门店配置、喜报配置、布局素材与运势管理",
+      "file": "23-nei-rong-yun-ying-mo-kuai-men-dian-pei-zhi-xi-bao-pei-zhi-bu-ju-su-cai-yu-yun-shi-guan-li.md",
+      "section": "Deep Dive",
+      "group": "后台管理与运营能力",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "24-fu-wu-duan-ru-kou-zhi-ze-jing-tai-tuo-guan-api-bian-pai-wen-jian-chu-li-yu-yi-chang-dou-di",
+      "title": "服务端入口职责：静态托管、API 编排、文件处理与异常兜底",
+      "file": "24-fu-wu-duan-ru-kou-zhi-ze-jing-tai-tuo-guan-api-bian-pai-wen-jian-chu-li-yu-yi-chang-dou-di.md",
+      "section": "Deep Dive",
+      "group": "后端与数据层实现",
+      "level": "Advanced"
+    },
+    {
+      "slug": "25-shu-ju-chi-jiu-hua-ce-lue-json-shu-ju-ku-chu-shi-hua-qian-yi-yu-jie-gou-yan-jin",
+      "title": "数据持久化策略：JSON 数据库初始化、迁移与结构演进",
+      "file": "25-shu-ju-chi-jiu-hua-ce-lue-json-shu-ju-ku-chu-shi-hua-qian-yi-yu-jie-gou-yan-jin.md",
+      "section": "Deep Dive",
+      "group": "后端与数据层实现",
+      "level": "Advanced"
+    },
+    {
+      "slug": "26-kai-jiang-li-shi-ju-he-lian-lu-li-shi-zhua-qu-biao-zhun-hua-qing-xi-yu-tong-shu-chu",
+      "title": "开奖历史聚合链路：历史抓取、标准化清洗与统一输出",
+      "file": "26-kai-jiang-li-shi-ju-he-lian-lu-li-shi-zhua-qu-biao-zhun-hua-qing-xi-yu-tong-shu-chu.md",
+      "section": "Deep Dive",
+      "group": "后端与数据层实现",
+      "level": "Advanced"
+    },
+    {
+      "slug": "27-gua-gua-le-zhua-qu-yu-tu-pian-chu-li-lian-lu-cai-ji-pin-jie-yu-jing-tai-zi-yuan-fu-wu",
+      "title": "刮刮乐抓取与图片处理链路：采集、拼接与静态资源服务",
+      "file": "27-gua-gua-le-zhua-qu-yu-tu-pian-chu-li-lian-lu-cai-ji-pin-jie-yu-jing-tai-zi-yuan-fu-wu.md",
+      "section": "Deep Dive",
+      "group": "后端与数据层实现",
+      "level": "Advanced"
+    },
+    {
+      "slug": "28-qi-ye-wei-xin-tui-song-lian-lu-token-huan-cun-su-cai-shang-chuan-yu-xiao-xi-fa-song-mo-shi",
+      "title": "企业微信推送链路：Token 缓存、素材上传与消息发送模式",
+      "file": "28-qi-ye-wei-xin-tui-song-lian-lu-token-huan-cun-su-cai-shang-chuan-yu-xiao-xi-fa-song-mo-shi.md",
+      "section": "Deep Dive",
+      "group": "后端与数据层实现",
+      "level": "Advanced"
+    },
+    {
+      "slug": "29-huan-cun-yu-shi-shi-xing-she-ji-data-json-te-shu-chu-li-yu-qian-duan-shua-xin-zhi-xing",
+      "title": "缓存与实时性设计：data.json 特殊处理与前端刷新一致性",
+      "file": "29-huan-cun-yu-shi-shi-xing-she-ji-data-json-te-shu-chu-li-yu-qian-duan-shua-xin-zhi-xing.md",
+      "section": "Deep Dive",
+      "group": "后端与数据层实现",
+      "level": "Advanced"
+    },
+    {
+      "slug": "30-zi-dong-hua-jiao-ben-di-tu-check-fix-deploy-verify-jiao-ben-zu-de-zhi-ze-hua-fen",
+      "title": "自动化脚本地图：check/fix/deploy/verify 脚本族的职责划分",
+      "file": "30-zi-dong-hua-jiao-ben-di-tu-check-fix-deploy-verify-jiao-ben-zu-de-zhi-ze-hua-fen.md",
+      "section": "Deep Dive",
+      "group": "工程治理与运维脚本",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "31-fa-bu-yu-yuan-cheng-zhen-duan-liu-cheng-bu-shu-jiao-ben-fu-wu-jian-cha-yu-gu-zhang-ding-wei-tao-lu",
+      "title": "发布与远程诊断流程：部署脚本、服务检查与故障定位套路",
+      "file": "31-fa-bu-yu-yuan-cheng-zhen-duan-liu-cheng-bu-shu-jiao-ben-fu-wu-jian-cha-yu-gu-zhang-ding-wei-tao-lu.md",
+      "section": "Deep Dive",
+      "group": "工程治理与运维脚本",
+      "level": "Advanced"
+    },
+    {
+      "slug": "32-li-shi-bei-fen-yu-chan-wu-guan-li-bei-fen-mu-lu-lin-shi-wen-jian-yu-gui-dang-ce-lue-jian-yi",
+      "title": "历史备份与产物管理：备份目录、临时文件与归档策略建议",
+      "file": "32-li-shi-bei-fen-yu-chan-wu-guan-li-bei-fen-mu-lu-lin-shi-wen-jian-yu-gui-dang-ce-lue-jian-yi.md",
+      "section": "Deep Dive",
+      "group": "工程治理与运维脚本",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "33-xin-zeng-men-dian-mo-ban-de-biao-zhun-bu-zou-lu-you-gua-zai-ye-mian-jie-ru-yu-pei-zhi-lian-dong",
+      "title": "新增门店模板的标准步骤：路由挂载、页面接入与配置联动",
+      "file": "33-xin-zeng-men-dian-mo-ban-de-biao-zhun-bu-zou-lu-you-gua-zai-ye-mian-jie-ru-yu-pei-zhi-lian-dong.md",
+      "section": "Deep Dive",
+      "group": "开发者进阶指南",
+      "level": "Intermediate"
+    },
+    {
+      "slug": "34-kuo-zhan-xin-shu-ju-yuan-de-shi-shi-lu-jing-api-dui-jie-zhua-qu-jian-kong-yu-qian-tai-xiao-fei",
+      "title": "扩展新数据源的实施路径：API 对接、抓取监控与前台消费",
+      "file": "34-kuo-zhan-xin-shu-ju-yuan-de-shi-shi-lu-jing-api-dui-jie-zhua-qu-jian-kong-yu-qian-tai-xiao-fei.md",
+      "section": "Deep Dive",
+      "group": "开发者进阶指南",
+      "level": "Advanced"
+    },
+    {
+      "slug": "35-zhi-liang-bao-zhang-jian-yi-qian-hou-duan-lian-diao-jian-cha-qing-dan-yu-guan-jian-hui-gui-chang-jing",
+      "title": "质量保障建议：前后端联调检查清单与关键回归场景",
+      "file": "35-zhi-liang-bao-zhang-jian-yi-qian-hou-duan-lian-diao-jian-cha-qing-dan-yu-guan-jian-hui-gui-chang-jing.md",
+      "section": "Deep Dive",
+      "group": "开发者进阶指南",
+      "level": "Advanced"
+    }
+  ]
+}

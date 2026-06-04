@@ -1,0 +1,32 @@
+name: Fetch Lottery Data
+
+on:
+  schedule:
+    # 每小时运行一次 (UTC时间)
+    - cron: '0 * * * *'
+  workflow_dispatch: # 允许手动点击按钮触发
+
+jobs:
+  fetch-and-update:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write # 允许写入代码仓库
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Fetch Script
+        run: node fetch_dlt.cjs
+
+      - name: Commit and Push changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: update lottery data [skip ci]"
+          file_pattern: public/data.json

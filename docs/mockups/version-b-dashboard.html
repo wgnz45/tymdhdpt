@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>方案B - 数据驾驶舱风</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif; background:#0b1426; color:#e2e8f0; }
+
+  .layout { display:flex; height:100vh; }
+
+  /* === SIDEBAR - Slightly lighter deep blue === */
+  .sidebar { width:200px; background:#0e1a32; border-right:1px solid rgba(59,130,246,0.1); display:flex; flex-direction:column; flex-shrink:0; }
+  .sidebar-logo { padding:20px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(59,130,246,0.08); }
+  .sidebar-logo-icon { width:36px; height:36px; background:linear-gradient(135deg,#3b82f6,#2563eb); border-radius:8px; display:flex; align-items:center; justify-content:center; }
+  .sidebar-logo-text h1 { font-size:14px; font-weight:700; color:#fff; }
+  .sidebar-logo-text p { font-size:10px; color:#4a6080; margin-top:2px; }
+
+  .sidebar-group-label { padding:16px 16px 6px; font-size:10px; font-weight:600; color:#3b5278; letter-spacing:1.5px; }
+
+  .sidebar-item { display:flex; align-items:center; gap:8px; padding:8px 16px; cursor:pointer; transition:all 0.15s; font-size:13px; color:#6b83a8; position:relative; margin:1px 8px; border-radius:6px; }
+  .sidebar-item:hover { background:rgba(59,130,246,0.06); color:#94b3d6; }
+  .sidebar-item.active { background:rgba(59,130,246,0.12); color:#60a5fa; }
+  .sidebar-item.active::before { content:''; position:absolute; left:-8px; top:50%; transform:translateY(-50%); width:3px; height:20px; background:#3b82f6; border-radius:0 2px 2px 0; }
+  .sidebar-item .icon { width:16px; height:16px; opacity:0.6; }
+  .sidebar-item.active .icon { opacity:1; }
+
+  .sidebar-spacer { flex:1; }
+  .sidebar-user { padding:12px 16px; border-top:1px solid rgba(59,130,246,0.08); display:flex; align-items:center; gap:8px; }
+  .sidebar-user-avatar { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,#3b82f6,#6366f1); display:flex; align-items:center; justify-content:center; color:#fff; font-size:11px; font-weight:600; }
+
+  /* === MAIN - Dark theme === */
+  .main { flex:1; overflow-y:auto; background:#0b1426; }
+  .topbar { padding:0 24px; height:52px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid rgba(59,130,246,0.06); }
+  .topbar-breadcrumb { font-size:13px; color:#4a6080; }
+  .topbar-breadcrumb span { color:#94b3d6; }
+  .topbar-time { font-size:12px; color:#3b5278; font-variant-numeric:tabular-nums; }
+
+  .content { padding:20px 24px; }
+
+  /* === COMPONENTS === */
+  .page-header { margin-bottom:24px; display:flex; justify-content:space-between; align-items:flex-start; }
+  .page-header h2 { font-size:20px; font-weight:700; color:#e2e8f0; }
+  .page-header p { font-size:12px; color:#4a6080; margin-top:4px; }
+
+  .card { background:#111d35; border:1px solid rgba(59,130,246,0.08); border-radius:10px; padding:20px; margin-bottom:16px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+  .card-title { font-size:13px; font-weight:600; color:#94b3d6; }
+
+  .btn { padding:6px 14px; border-radius:6px; font-size:12px; font-weight:500; cursor:pointer; border:none; transition:all 0.15s; }
+  .btn-primary { background:#2563eb; color:#fff; }
+  .btn-primary:hover { background:#1d4ed8; }
+  .btn-ghost { background:transparent; color:#6b83a8; border:1px solid rgba(59,130,246,0.15); }
+  .btn-ghost:hover { background:rgba(59,130,246,0.06); color:#94b3d6; }
+  .btn-sm { padding:4px 10px; font-size:11px; }
+
+  /* Stats - Glow cards */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .stat-card { background:#111d35; border:1px solid rgba(59,130,246,0.08); border-radius:10px; padding:18px; position:relative; overflow:hidden; }
+  .stat-card::after { content:''; position:absolute; top:0; right:0; width:80px; height:80px; border-radius:50%; filter:blur(40px); opacity:0.1; }
+  .stat-card.blue::after { background:#3b82f6; }
+  .stat-card.green::after { background:#22c55e; }
+  .stat-card.orange::after { background:#f59e0b; }
+  .stat-card.purple::after { background:#8b5cf6; }
+  .stat-icon { width:36px; height:36px; border-radius:8px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; }
+  .stat-icon.blue { background:rgba(59,130,246,0.15); color:#60a5fa; }
+  .stat-icon.green { background:rgba(34,197,94,0.15); color:#4ade80; }
+  .stat-icon.orange { background:rgba(245,158,11,0.15); color:#fbbf24; }
+  .stat-icon.purple { background:rgba(139,92,246,0.15); color:#a78bfa; }
+  .stat-label { font-size:12px; color:#4a6080; margin-bottom:4px; }
+  .stat-value { font-size:26px; font-weight:700; color:#e2e8f0; }
+  .stat-footer { display:flex; align-items:center; gap:4px; margin-top:6px; font-size:11px; }
+  .stat-footer.up { color:#4ade80; }
+  .stat-footer.down { color:#f87171; }
+
+  /* Table */
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  thead { border-bottom:1px solid rgba(59,130,246,0.1); }
+  th { padding:8px 10px; text-align:left; color:#4a6080; font-weight:500; font-size:11px; }
+  td { padding:10px 10px; border-bottom:1px solid rgba(59,130,246,0.04); color:#94b3d6; }
+  tr:hover td { background:rgba(59,130,246,0.03); }
+
+  .badge { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:500; }
+  .badge-green { background:rgba(34,197,94,0.12); color:#4ade80; }
+  .badge-red { background:rgba(239,68,68,0.12); color:#f87171; }
+  .badge-blue { background:rgba(59,130,246,0.12); color:#60a5fa; }
+  .badge-orange { background:rgba(245,158,11,0.12); color:#fbbf24; }
+
+  .status-dot { width:6px; height:6px; border-radius:50%; display:inline-block; }
+  .status-dot.on { background:#4ade80; box-shadow:0 0 6px rgba(74,222,128,0.5); }
+  .status-dot.off { background:#4a6080; }
+
+  /* Mini chart placeholder */
+  .mini-chart { height:40px; display:flex; align-items:flex-end; gap:2px; }
+  .mini-chart .bar { width:4px; border-radius:2px 2px 0 0; background:rgba(59,130,246,0.3); }
+  .mini-chart .bar:last-child { background:#3b82f6; }
+
+  /* Store list compact */
+  .store-list { display:flex; flex-direction:column; gap:2px; }
+  .store-row { display:grid; grid-template-columns:2fr 1fr 1fr 1.5fr 1fr; align-items:center; padding:10px 12px; border-radius:6px; transition:background 0.1s; }
+  .store-row:hover { background:rgba(59,130,246,0.04); }
+  .store-name { font-weight:500; color:#c8d6e5; display:flex; align-items:center; gap:8px; }
+  .store-meta { color:#4a6080; font-size:11px; }
+  .store-actions { display:flex; gap:4px; }
+
+  /* Tabs */
+  .tabs { display:flex; gap:0; margin-bottom:16px; background:#0e1a32; border-radius:8px; padding:3px; width:fit-content; }
+  .tab { padding:6px 16px; font-size:12px; font-weight:500; color:#4a6080; border-radius:6px; cursor:pointer; transition:all 0.15s; }
+  .tab.active { background:rgba(59,130,246,0.15); color:#60a5fa; }
+  .tab:hover:not(.active) { color:#6b83a8; }
+
+  /* Quick actions */
+  .quick-actions { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:20px; }
+  .quick-action { background:#111d35; border:1px solid rgba(59,130,246,0.08); border-radius:10px; padding:16px; text-align:center; cursor:pointer; transition:all 0.2s; }
+  .quick-action:hover { border-color:rgba(59,130,246,0.2); background:rgba(59,130,246,0.04); }
+  .quick-action-icon { width:40px; height:40px; border-radius:10px; margin:0 auto 8px; display:flex; align-items:center; justify-content:center; }
+  .quick-action-label { font-size:12px; color:#94b3d6; }
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"/></svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <h1>体彩信息发布终端平台</h1>
+        <p>Management Console</p>
+      </div>
+    </div>
+
+    <div class="sidebar-group-label">运营管理</div>
+    <div class="sidebar-item active">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      数据概览
+    </div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      门店管理
+    </div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+      公告管理
+    </div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      喜报中心
+    </div>
+
+    <div class="sidebar-group-label">内容</div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      素材管理
+    </div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+      信源监控
+    </div>
+
+    <div class="sidebar-group-label">系统</div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      远程控制
+    </div>
+    <div class="sidebar-item">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33"/></svg>
+      系统设置
+    </div>
+
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-user">
+      <div class="sidebar-user-avatar">管</div>
+      <div style="font-size:12px;color:#6b83a8">管理员</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-breadcrumb">首页 / <span>数据概览</span></div>
+      <div class="topbar-time">2026-04-16 14:32:08</div>
+    </div>
+
+    <div class="content">
+      <!-- Header -->
+      <div class="page-header">
+        <div>
+          <h2>数据概览</h2>
+          <p>实时监控全省体彩门店运营状态</p>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm">导出报表</button>
+          <button class="btn btn-primary btn-sm">全局刷新</button>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <div class="quick-action">
+          <div class="quick-action-icon" style="background:rgba(59,130,246,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 11-2.12-9.36L23 10"/></svg>
+          </div>
+          <div class="quick-action-label">刷新全部页面</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon" style="background:rgba(34,197,94,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+          <div class="quick-action-label">手动开奖</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon" style="background:rgba(245,158,11,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          </div>
+          <div class="quick-action-label">数据源刷新</div>
+        </div>
+        <div class="quick-action">
+          <div class="quick-action-icon" style="background:rgba(139,92,246,0.12);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          </div>
+          <div class="quick-action-label">远程控制</div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-row">
+        <div class="stat-card blue">
+          <div class="stat-icon blue">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+          </div>
+          <div class="stat-label">托管门店</div>
+          <div class="stat-value">48</div>
+          <div class="stat-footer up">+3 本月新增</div>
+        </div>
+        <div class="stat-card green">
+          <div class="stat-icon green">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          </div>
+          <div class="stat-label">在线设备</div>
+          <div class="stat-value">42 <span style="font-size:14px;color:#4a6080;font-weight:400">/ 48</span></div>
+          <div class="stat-footer up">87.5% 在线率</div>
+        </div>
+        <div class="stat-card orange">
+          <div class="stat-icon orange">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="stat-label">今日点击</div>
+          <div class="stat-value">1,247</div>
+          <div class="stat-footer up">+12.3% 较昨日</div>
+        </div>
+        <div class="stat-card purple">
+          <div class="stat-icon purple">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </div>
+          <div class="stat-label">今日分享</div>
+          <div class="stat-value">86</div>
+          <div class="stat-footer down">-5.1% 较昨日</div>
+        </div>
+      </div>
+
+      <!-- Two column layout -->
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:16px;">
+        <!-- Left: Store List -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">门店状态</div>
+            <div style="display:flex;gap:6px;">
+              <div class="tabs" style="margin:0;">
+                <div class="tab active">全部</div>
+                <div class="tab">在线</div>
+                <div class="tab">离线</div>
+              </div>
+            </div>
+          </div>
+          <div class="store-list">
+            <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1.5fr 1fr;padding:6px 12px;font-size:10px;color:#3b5278;border-bottom:1px solid rgba(59,130,246,0.06);">
+              <span>门店名称</span><span>渠道</span><span>状态</span><span>当前页面</span><span>操作</span>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot on"></span>福州鼓楼旗舰店</div>
+              <div class="store-meta">TV</div>
+              <div><span class="badge badge-green">在线</span></div>
+              <div class="store-meta">默认主页</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot on"></span>厦门思明体彩站</div>
+              <div class="store-meta">Android</div>
+              <div><span class="badge badge-green">在线</span></div>
+              <div class="store-meta">VIP风格</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot off"></span>泉州丰泽销售点</div>
+              <div class="store-meta">TV</div>
+              <div><span class="badge badge-red">离线</span></div>
+              <div class="store-meta">—</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot on"></span>莆田城厢体彩站</div>
+              <div class="store-meta">TV</div>
+              <div><span class="badge badge-green">在线</span></div>
+              <div class="store-meta">默认主页</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot off"></span>漳州芗城销售厅</div>
+              <div class="store-meta">Android</div>
+              <div><span class="badge badge-orange">暂停</span></div>
+              <div class="store-meta">—</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot on"></span>龙岩新罗旗舰店</div>
+              <div class="store-meta">TV</div>
+              <div><span class="badge badge-green">在线</span></div>
+              <div class="store-meta">国潮风</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+            <div class="store-row">
+              <div class="store-name"><span class="status-dot on"></span>三明三元销售点</div>
+              <div class="store-meta">TV</div>
+              <div><span class="badge badge-green">在线</span></div>
+              <div class="store-meta">默认主页</div>
+              <div class="store-actions">
+                <button class="btn btn-ghost btn-sm">配置</button>
+                <button class="btn btn-ghost btn-sm">导航</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: System Health + Mini Charts -->
+        <div style="display:flex;flex-direction:column;gap:16px;">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">系统健康</div>
+            </div>
+            <table>
+              <tbody>
+                <tr>
+                  <td style="color:#c8d6e5;">Express</td>
+                  <td><span class="badge badge-green">运行中</span></td>
+                  <td style="color:#4a6080">12ms</td>
+                </tr>
+                <tr>
+                  <td style="color:#c8d6e5;">MySQL</td>
+                  <td><span class="badge badge-green">已连接</span></td>
+                  <td style="color:#4a6080">3ms</td>
+                </tr>
+                <tr>
+                  <td style="color:#c8d6e5;">爬虫</td>
+                  <td><span class="badge badge-blue">待命</span></td>
+                  <td style="color:#4a6080">下次 21:25</td>
+                </tr>
+                <tr>
+                  <td style="color:#c8d6e5;">Cron</td>
+                  <td><span class="badge badge-green">已启用</span></td>
+                  <td style="color:#4a6080">* * * * *</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">今日点击趋势</div>
+            </div>
+            <div class="mini-chart">
+              <div class="bar" style="height:30%"></div>
+              <div class="bar" style="height:45%"></div>
+              <div class="bar" style="height:35%"></div>
+              <div class="bar" style="height:60%"></div>
+              <div class="bar" style="height:55%"></div>
+              <div class="bar" style="height:70%"></div>
+              <div class="bar" style="height:65%"></div>
+              <div class="bar" style="height:80%"></div>
+              <div class="bar" style="height:75%"></div>
+              <div class="bar" style="height:90%"></div>
+              <div class="bar" style="height:85%"></div>
+              <div class="bar" style="height:100%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#3b5278;margin-top:8px;">
+              <span>08:00</span><span>12:00</span><span>14:32</span>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">渠道分布</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                  <span style="color:#94b3d6;">TV 电视盒子</span>
+                  <span style="color:#4a6080;">35 家</span>
+                </div>
+                <div style="height:6px;background:rgba(59,130,246,0.1);border-radius:3px;overflow:hidden;">
+                  <div style="width:73%;height:100%;background:#3b82f6;border-radius:3px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                  <span style="color:#94b3d6;">Android 安卓设备</span>
+                  <span style="color:#4a6080;">10 家</span>
+                </div>
+                <div style="height:6px;background:rgba(139,92,246,0.1);border-radius:3px;overflow:hidden;">
+                  <div style="width:21%;height:100%;background:#8b5cf6;border-radius:3px;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+                  <span style="color:#94b3d6;">公告渠道</span>
+                  <span style="color:#4a6080;">3 家</span>
+                </div>
+                <div style="height:6px;background:rgba(245,158,11,0.1);border-radius:3px;overflow:hidden;">
+                  <div style="width:6%;height:100%;background:#f59e0b;border-radius:3px;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

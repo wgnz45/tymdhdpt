@@ -3,8 +3,8 @@
 
 $server = "43.139.235.181"
 $user   = "root"
-$local  = "e:/CJDLT/dist/games"
-$remote = "/opt/cjdlt/dist/games"
+$local  = "$PSScriptRoot/../../dist/games"
+$remote = "/opt/tymdhdpt/dist/games"
 
 Write-Host "===== 部署小游戏 =====" -ForegroundColor Cyan
 Write-Host "服务器: $server"

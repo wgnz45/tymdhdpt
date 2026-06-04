@@ -24,8 +24,8 @@ sudo ufw allow OpenSSH
 echo "y" | sudo ufw enable
 
 echo ">>> Creating Project Directory..."
-sudo mkdir -p /var/www/cj_lottery
-sudo chown -R $USER:$USER /var/www/cj_lottery
+sudo mkdir -p /opt/tymdhdpt
+sudo chown -R $USER:$USER /opt/tymdhdpt
 
 echo ">>> Environment Setup Complete! ✅"
 echo "Node Version: $(node -v)"

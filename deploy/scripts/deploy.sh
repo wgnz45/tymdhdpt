@@ -1,5 +1,5 @@
 #!/bin/bash
-# ===== CJDLT 一键部署脚本 =====
+# ===== 体彩门店互动平台 一键部署脚本 =====
 # 在腾讯云 Ubuntu 22.04 服务器上运行
 
 set -e
@@ -21,16 +21,16 @@ echo "===== 4. 安装编译工具 (better-sqlite3 需要) ====="
 sudo apt install -y build-essential python3
 
 echo "===== 5. 创建项目目录 ====="
-sudo mkdir -p /opt/cjdlt
-sudo chown ubuntu:ubuntu /opt/cjdlt
+sudo mkdir -p /opt/tymdhdpt
+sudo chown ubuntu:ubuntu /opt/tymdhdpt
 
 echo "===== 6. 安装依赖 ====="
-cd /opt/cjdlt/server
+cd /opt/tymdhdpt/server
 npm install --production
 
 echo "===== 7. 启动服务 ====="
-pm2 stop cjdlt 2>/dev/null || true
-pm2 start index.js --name cjdlt --cwd /opt/cjdlt/server
+pm2 stop tymdhdpt 2>/dev/null || true
+pm2 start index.js --name tymdhdpt --cwd /opt/tymdhdpt/server
 pm2 save
 pm2 startup | tail -1 | bash || true
 

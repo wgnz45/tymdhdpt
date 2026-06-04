@@ -3465,12 +3465,12 @@ const keyPath = path.join(certDir, 'server.key');
     if (!fs.existsSync(certPath) || !fs.existsSync(keyPath)) {
         try {
             const selfsigned = require('selfsigned');
-            const attrs = [{ name: 'commonName', value: '192.168.15.236' }];
+            const attrs = [{ name: 'commonName', value: '192.168.15.218' }];
             const pems = await selfsigned.generate(attrs, {
                 days: 3650,
                 keySize: 2048,
                 extensions: [
-                    { name: 'subjectAltName', altNames: [{ type: 7, ip: '192.168.15.236' }] }
+                    { name: 'subjectAltName', altNames: [{ type: 7, ip: '192.168.15.218' }] }
                 ]
             });
             fs.writeFileSync(keyPath, pems.private);

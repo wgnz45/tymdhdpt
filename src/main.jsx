@@ -13,7 +13,7 @@ import App from './App.jsx'
     if (!isNative) return;
 
     // ⚠️ 联调阶段写死开发机局域网 IP，正式部署时改成 https://你的后端域名
-    const API_BASE = 'http://192.168.15.236:3366';
+    const API_BASE = 'http://192.168.15.218:3366';
 
     const origFetch = window.fetch.bind(window);
     window.fetch = (input, init) => {

@@ -1730,34 +1730,16 @@ export default function Home({ onBack, onReady }) {
                                 {/* Controls - REVERSED: Package Left, Regular Right */}
                                 {isMobile ? (
                                     // --- MOBILE: TABS ---
-                                    <div className="flex flex-col flex-1 min-h-0 bg-white/50 rounded-xl overflow-hidden shadow-inner border border-white/50 relative">
+                                    <div className="flex flex-col flex-1 min-h-0 bg-white/50 rounded-xl overflow-y-auto shadow-inner border border-white/50 relative gap-3 p-3">
                                         {isRolling && <SelectionOverlay />}
-                                        {/* Tab Headers */}
-                                        <div className="flex border-b border-gray-200 bg-white">
-                                            {/* Regular Tab */}
-                                            {(storeConfig.features?.regular !== false) && (
-                                                <button
-                                                    onClick={() => setMobileTab('regular')}
-                                                    className={`flex-1 py-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${mobileTab === 'regular' ? 'text-orange-600 bg-orange-50 border-b-2 border-orange-500' : 'text-gray-500 hover:bg-gray-50'}`}
-                                                >
-                                                    <i className="fa-solid fa-crown"></i> 常规选号
-                                                </button>
-                                            )}
-                                            {/* Package Tab */}
-                                            {(storeConfig.features?.package !== false) && (
-                                                <button
-                                                    onClick={() => setMobileTab('package')}
-                                                    className={`flex-1 py-2 text-sm font-bold flex items-center justify-center gap-2 transition-colors ${mobileTab === 'package' ? 'text-green-600 bg-green-50 border-b-2 border-green-500' : 'text-gray-500 hover:bg-gray-50'}`}
-                                                >
-                                                    <i className="fa-solid fa-box-open"></i> 套餐票
-                                                </button>
-                                            )}
-                                        </div>
 
-                                        {/* Tab Content */}
-                                        <div className={`flex-1 overflow-y-auto p-3 ${isRolling ? 'opacity-50 pointer-events-none' : ''}`}>
-                                            {mobileTab === 'regular' ? (
-                                                <div className="grid grid-cols-2 gap-3 pb-20">
+                                        {/* Regular Section */}
+                                        {(storeConfig.features?.regular !== false) && (
+                                            <div>
+                                                <h4 className="text-sm font-bold text-orange-600 flex items-center gap-2 mb-2">
+                                                    <i className="fa-solid fa-crown"></i> 常规选号
+                                                </h4>
+                                                <div className="grid grid-cols-2 gap-2">
                                                     {(storeConfig.gameConfig?.regulars?.length > 0) ? (
                                                         storeConfig.gameConfig.regulars.map((item) => (
                                                             <MobileCouponButton
@@ -1765,7 +1747,7 @@ export default function Home({ onBack, onReady }) {
                                                                 price={item.price}
                                                                 title={item.label}
                                                                 color={item.color || "orange"}
-                                                                className="h-14"
+                                                                className="h-12"
                                                                 onClick={() => {
                                                                     if (item.action === 'batch') {
                                                                         handleBatchBet(item.params.count);
@@ -1776,14 +1758,19 @@ export default function Home({ onBack, onReady }) {
                                                             />
                                                         ))
                                                     ) : (
-                                                        <div className="col-span-2 flex flex-col items-center justify-center text-gray-400 py-12">
-                                                            <i className="fa-solid fa-crown text-4xl mb-3 opacity-30"></i>
-                                                            <span className="text-sm font-bold opacity-60">暂无常规配置</span>
-                                                        </div>
+                                                        <div className="col-span-2 text-center text-gray-400 py-4 text-sm">暂无常规配置</div>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                <div className="grid grid-cols-2 gap-3 pb-20">
+                                            </div>
+                                        )}
+
+                                        {/* Package Section */}
+                                        {(storeConfig.features?.package !== false) && (
+                                            <div>
+                                                <h4 className="text-sm font-bold text-green-600 flex items-center gap-2 mb-2">
+                                                    <i className="fa-solid fa-box-open"></i> 套餐票
+                                                </h4>
+                                                <div className="grid grid-cols-2 gap-2">
                                                     {(storeConfig.gameConfig?.packages?.length > 0) ? (
                                                         storeConfig.gameConfig.packages.map((pkg) => (
                                                             <MobileCouponButton
@@ -1792,26 +1779,24 @@ export default function Home({ onBack, onReady }) {
                                                                 title={
                                                                     <div className="flex flex-col gap-0.5">
                                                                         {pkg.items.map((item, idx) => (
-                                                                            <span key={idx} className="text-lg font-black text-gray-800 leading-tight">
+                                                                            <span key={idx} className="text-sm font-black text-gray-800 leading-tight">
                                                                                 {item.text || (item.type === 'batch' ? `单式 ${item.count} 注` : `复式 ${item.r} + ${item.b}`)}
                                                                             </span>
                                                                         ))}
                                                                     </div>
                                                                 }
                                                                 color="green"
-                                                                className="min-h-[4.8rem]"
+                                                                className="min-h-[3.5rem]"
                                                                 onClick={() => handlePackageBet(pkg.title, pkg.items)}
                                                             />
                                                         ))
                                                     ) : (
-                                                        <div className="col-span-2 flex flex-col items-center justify-center text-gray-400 py-12">
-                                                            <i className="fa-solid fa-box-open text-4xl mb-3 opacity-30"></i>
-                                                            <span className="text-sm font-bold opacity-60">暂无套餐配置</span>
-                                                        </div>
+                                                        <div className="col-span-2 text-center text-gray-400 py-4 text-sm">暂无套餐配置</div>
                                                     )}
                                                 </div>
-                                            )}
-                                        </div>
+                                            </div>
+                                        )}
+
                                         {editingTicketId && editingBetIndex !== null && (
                                             <MobileTicketEditor
                                                 ticket={tickets.find(t => t.id === editingTicketId)}

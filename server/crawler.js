@@ -76,44 +76,6 @@ async function fetchFujianWelfare() {
     }
 }
 
-/**
- * 从福建体彩网首页抓取新闻标题列表
- * @param {number} limit
- */
-async function fetchFjtcNews(limit = 5) {
-    try {
-        const axios = require('axios');
-        const cheerio = require('cheerio');
-        const res = await axios.get('https://www.fjtc.com.cn/', {
-            timeout: 10000,
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-        });
-        const $ = cheerio.load(res.data);
-        const items = [];
-        $('a[href]').each((i, el) => {
-            if (items.length >= limit) return false;
-            const title = $(el).text().trim().replace(/\s+/g, ' ');
-            const href = $(el).attr('href') || '';
-            if (title.length > 8 && title.length < 80 &&
-                (href.includes('.htm') || href.includes('.html') || href.includes('/news'))) {
-                const fullHref = href.startsWith('http') ? href : `https://www.fjtc.com.cn${href.startsWith('/') ? '' : '/'}${href}`;
-                if (!items.find(it => it.title === title)) {
-                    items.push({
-                        id: `fjtc_${Date.now()}_${i}`,
-                        title,
-                        url: fullHref,
-                        date: new Date().toLocaleDateString('zh-CN'),
-                        source: '福建体彩网'
-                    });
-                }
-            }
-        });
-        return items;
-    } catch (e) {
-        console.warn('[Crawler] fetchFjtcNews failed:', e.message);
-        return [];
-    }
-}
 
 /**
  * 统一日期格式为 xxxx年x月x日
@@ -149,12 +111,11 @@ function formatToChineseDate(dateStr) {
 async function runAllCrawlers(historySize = 20) {
     console.log('[Crawler] Running all crawlers...');
 
-    // 并发执行：福建开奖 + 国家公益金 + 福建公益金 + 新闻
-    const [fujianDraws, nationalWelfare, fujianWelfare, newsItems] = await Promise.allSettled([
+    // 并发执行：福建开奖 + 国家公益金 + 福建公益金
+    const [fujianDraws, nationalWelfare, fujianWelfare] = await Promise.allSettled([
         fetchFujianDraws(),
         fetchNationalWelfare(),
-        fetchFujianWelfare(),
-        fetchFjtcNews(5)
+        fetchFujianWelfare()
     ]).then(results => results.map(r => r.status === 'fulfilled' ? r.value : null));
 
     // 组装 welfare 结构（分模块：全国 vs 福建）
@@ -192,17 +153,10 @@ async function runAllCrawlers(historySize = 20) {
         time: d.time
     }));
 
-    // 行业资讯和地方动态（根据福建体彩网新闻列表切分或分类）
-    // 此处策略：前3条归为 industry，后2条归为 local
-    const industry = (newsItems || []).slice(0, 3);
-    const local = (newsItems || []).slice(3, 5);
-
     const result = {
         timestamp: new Date().toISOString(),
         status: 'success',
         welfare, // 包含 national 和 fujian
-        industry,
-        local,
         draws,   // 统计卡片使用此 key
         fujianDraws: draws, // 前端开奖列表展示使用此 key
         puppeteerEnabled: true

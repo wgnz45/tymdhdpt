@@ -241,7 +241,7 @@ GL_EXT_shader_framebuffer_fetch
 SSID: <unknown ssid>
 BSSID: 02:00:00:00:00:00
 隐藏 SSID: 否
-IPv4 地址: 192.168.15.236
+IPv4 地址: 192.168.15.218
 IPv6 地址: fe80::9897:d4ff:fef6:b01a
 信号强度: -47 dBm (非常好)
 链接速度: 154 Mbps

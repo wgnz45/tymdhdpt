@@ -296,11 +296,11 @@
 
 /* Custom ball styles */
 .ball-red {
-    @apply w-10 h-10 rounded-full border-2 border-red-500 text-red-600 font-bold flex items-center justify-center text-lg bg-white shadow-sm;
+    @apply rounded-full border-2 border-red-500 text-red-600 font-bold flex items-center justify-center text-lg bg-white shadow-sm aspect-square;
 }
 
 .ball-blue {
-    @apply w-10 h-10 rounded-full border-2 border-blue-500 text-blue-600 font-bold flex items-center justify-center text-lg bg-white shadow-sm;
+    @apply rounded-full border-2 border-blue-500 text-blue-600 font-bold flex items-center justify-center text-lg bg-white shadow-sm aspect-square;
 }
 
 .ball-red-active {

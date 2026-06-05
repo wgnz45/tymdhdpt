@@ -1347,10 +1347,10 @@ export default function Home({ onBack, onReady }) {
                                 <div className="p-5 bg-white border-b border-dashed border-gray-200 shadow-sm relative z-10">
                                     <div className="flex flex-nowrap gap-2 justify-center mb-4">
                                         {drawData.latest.reds.map((n, i) => (
-                                            <div key={`lr-${i}`} className="w-9 h-9 rounded-full bg-red-600 text-white font-black flex items-center justify-center shadow-lg text-base border border-red-700">{n}</div>
+                                            <div key={`lr-${i}`} className="w-9 h-9 aspect-square rounded-full bg-red-600 text-white font-black flex items-center justify-center shadow-lg text-base border border-red-700">{n}</div>
                                         ))}
                                         {drawData.latest.blues.map((n, i) => (
-                                            <div key={`lb-${i}`} className="w-9 h-9 rounded-full bg-blue-600 text-white font-black flex items-center justify-center shadow-lg text-base border border-blue-700">{n}</div>
+                                            <div key={`lb-${i}`} className="w-9 h-9 aspect-square rounded-full bg-blue-600 text-white font-black flex items-center justify-center shadow-lg text-base border border-blue-700">{n}</div>
                                         ))}
                                     </div>
 
@@ -1374,19 +1374,19 @@ export default function Home({ onBack, onReady }) {
                                         {drawData.history.map((item, idx) => (
                                             <div key={idx} className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm flex flex-col gap-2 hover:shadow-lg transition-all transform hover:-translate-y-0.5 duration-200">
                                                 <div className="flex justify-between items-center text-xs border-b border-gray-50 pb-2 mb-1">
-                                                    <span className="font-bold text-gray-800">第{item.period}期</span>
+                                                    <span className="font-bold text-gray-800">{item.period}</span>
                                                     <span className="text-gray-400 text-xs">{item.date}</span>
                                                 </div>
                                                 <div className="flex items-center justify-start gap-3 px-1 whitespace-nowrap">
                                                     <div className="flex gap-1.5">
                                                         {item.reds.map((n, i) => (
-                                                            <div key={`hr-${i}`} className="w-6 h-6 rounded-full bg-red-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">{n}</div>
+                                                            <div key={`hr-${i}`} className="w-6 h-6 aspect-square rounded-full bg-red-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">{n}</div>
                                                         ))}
                                                     </div>
                                                     <div className="w-[1px] h-4 bg-gray-200"></div>
                                                     <div className="flex gap-1.5">
                                                         {item.blues.map((n, i) => (
-                                                            <div key={`hb-${i}`} className="w-6 h-6 rounded-full bg-blue-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">{n}</div>
+                                                            <div key={`hb-${i}`} className="w-6 h-6 aspect-square rounded-full bg-blue-500 text-white font-bold flex items-center justify-center text-xs shadow-sm">{n}</div>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -1442,19 +1442,6 @@ export default function Home({ onBack, onReady }) {
                                 </div>
                             </header>
 
-                            {/* Marquee Banner */}
-                            <div
-                                className={`bg-red-500/10 border-b overflow-hidden relative flex items-center ${androidPadMode ? 'border-transparent' : 'border-red-500/20'}`}
-                                style={androidPadMode ? { height: '28px', borderBottomColor: 'transparent', boxShadow: 'inset 0 -1px 0 rgba(239,68,68,0.18)' } : { height: '28px' }}
-                            >
-                                <div className="animate-marquee whitespace-nowrap text-xs font-bold text-red-600 px-4">
-                                    {(storeConfig.marquees && storeConfig.marquees.length > 0)
-                                        ? storeConfig.marquees.map(m => m.text).join(' \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0 ')
-                                        : `${storeConfig.name} 欢迎您！ 联系方式：${storeConfig.contact || '请咨询店主'} \u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0 ${storeConfig.slogan || '快乐购彩 理性投注'}`
-                                    }
-                                </div>
-                            </div>
-
 
 
                             {/* Store Name Display (Below Marquee) */}
@@ -1507,10 +1494,10 @@ export default function Home({ onBack, onReady }) {
                                                         </div>
                                                         <div className="flex justify-center gap-1">
                                                             {drawData.latest.reds.map((n, i) => (
-                                                                <div key={`lr-${i}`} className="w-6 h-6 rounded-full bg-red-600 text-white font-bold flex items-center justify-center text-[10px] shadow-sm leading-none">{n}</div>
+                                                                <div key={`lr-${i}`} className="w-6 h-6 aspect-square rounded-full bg-red-600 text-white font-bold flex items-center justify-center text-[10px] shadow-sm leading-none">{n}</div>
                                                             ))}
                                                             {drawData.latest.blues.map((n, i) => (
-                                                                <div key={`lb-${i}`} className="w-6 h-6 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px] shadow-sm leading-none">{n}</div>
+                                                                <div key={`lb-${i}`} className="w-6 h-6 aspect-square rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-[10px] shadow-sm leading-none">{n}</div>
                                                             ))}
                                                         </div>
                                                     </div>
@@ -1520,7 +1507,7 @@ export default function Home({ onBack, onReady }) {
                                                         {drawData.history.slice(0, !showFullHistory ? 4 : undefined).map((item, idx) => (
                                                             <div key={idx} className="flex items-center justify-between p-2 border-b border-gray-100 last:border-0 hover:bg-white transition-colors">
                                                                 <div className="flex flex-col w-20 flex-none">
-                                                                    <span className="font-bold text-gray-600 scale-90 origin-left whitespace-nowrap">第{item.period}期</span>
+                                                                    <span className="font-bold text-gray-600 scale-90 origin-left whitespace-nowrap">{item.period}</span>
                                                                     <span className="text-[9px] text-gray-300 scale-90 origin-left">{item.date.slice(5)}</span>
                                                                 </div>
                                                                 <div className="flex gap-1 flex-1 justify-end">
@@ -2565,94 +2552,6 @@ export default function Home({ onBack, onReady }) {
                                                     <i className="fa-solid fa-qrcode text-lg"></i>
                                                 </div>
                                                 <span className="text-xs text-gray-700 font-medium">扫码下载</span>
-                                            </button>
-                                        )}
-
-                                        {/* PC or APK: Send to WeChat Webhook (only if webhookUrl configured) */}
-                                        {(!isMobile || isNativeApp) && storeConfig.webhookUrl && (
-                                            <button
-                                                onClick={async () => {
-                                                    if (!shareRef.current) return;
-
-                                                    const original = shareRef.current;
-                                                    const clone = original.cloneNode(true);
-
-                                                    const wrapper = document.createElement('div');
-                                                    wrapper.style.position = 'absolute';
-                                                    wrapper.style.top = '0';
-                                                    wrapper.style.left = '0';
-                                                    wrapper.style.width = original.offsetWidth + 'px';
-                                                    wrapper.style.height = 'auto';
-                                                    wrapper.style.zIndex = '-9999';
-                                                    wrapper.style.overflow = 'hidden';
-                                                    wrapper.style.pointerEvents = 'none';
-                                                    wrapper.style.backgroundColor = '#ffffff';
-
-                                                    clone.style.width = '100%';
-                                                    clone.style.position = 'relative';
-                                                    clone.style.margin = '0';
-                                                    clone.style.transform = 'none';
-                                                    clone.style.backgroundColor = '#F3F4F6';
-                                                    clone.style.display = 'block';
-
-                                                    wrapper.appendChild(clone);
-                                                    document.body.appendChild(wrapper);
-
-                                                    await new Promise(resolve => setTimeout(resolve, 100));
-
-                                                    try {
-                                                        const rect = clone.getBoundingClientRect();
-
-                                                        const html2canvas = (await import('html2canvas')).default;
-                                                        const canvas = await html2canvas(clone, {
-                                                            useCORS: true,
-                                                            backgroundColor: '#F3F4F6',
-                                                            scale: 3,
-                                                            logging: false,
-                                                            scrollX: 0,
-                                                            scrollY: 0,
-                                                            width: wrapper.offsetWidth,
-                                                            windowWidth: wrapper.offsetWidth,
-                                                            height: rect.height,
-                                                            windowHeight: rect.height,
-                                                            x: 0,
-                                                            y: 0
-                                                        });
-
-                                                        document.body.removeChild(wrapper);
-
-                                                        const imgData = canvas.toDataURL('image/png');
-
-                                                        // Send to WeChat Webhook
-                                                        const blob = await (await fetch(imgData)).blob();
-                                                        const formData = new FormData();
-                                                        formData.append('file', blob, 'share.png');
-                                                        formData.append('storeId', storeId || 'default');
-
-                                                        const response = await fetch('/api/wechat/send-image', {
-                                                            method: 'POST',
-                                                            body: formData
-                                                        });
-                                                        const data = await response.json();
-                                                        if (data.success) {
-                                                            alert('已发送到企业微信群！');
-                                                        } else {
-                                                            alert('发送失败：' + data.message);
-                                                        }
-                                                    } catch (err) {
-                                                        console.error("WeChat send failed:", err);
-                                                        if (document.body.contains(wrapper)) {
-                                                            document.body.removeChild(wrapper);
-                                                        }
-                                                        alert("发送失败: " + (err.message || "未知错误"));
-                                                    }
-                                                }}
-                                                className="flex flex-col items-center gap-2 group py-2"
-                                            >
-                                                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center text-green-600 group-hover:bg-green-200 group-active:scale-95 transition-all">
-                                                    <i className="fa-brands fa-weixin text-lg"></i>
-                                                </div>
-                                                <span className="text-xs text-gray-700 font-medium">发送站点</span>
                                             </button>
                                         )}
                                     </div>

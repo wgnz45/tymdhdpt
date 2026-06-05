@@ -56,7 +56,6 @@ export default function AdminLayout() {
         if (hasPerm('layout') || hasPerm('carousel')) content.push({ icon: Camera, label: '大头贴边框', path: '/admin/photo-frames' });
         if (hasPerm('layout') || hasPerm('carousel')) content.push({ icon: Gamepad2, label: '互动Logo', path: '/admin/game-logos' });
         if (hasPerm('store_config')) content.push({ icon: Trophy, label: '喜报中心', path: '/admin/winner-config' });
-        if (hasPerm('fortune')) content.push({ icon: Sparkles, label: '今日运势', path: '/admin/fortune' });
         if (content.length) groups.push({ label: '内容资源', items: content });
 
         const games = [];

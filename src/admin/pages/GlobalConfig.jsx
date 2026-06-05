@@ -23,7 +23,6 @@ export default function GlobalConfig() {
 
     // Extra info from config
     const [cronConfig, setCronConfig] = useState(null);
-    const [fortuneSync, setFortuneSync] = useState(null);
 
     // QR Config state
     const [qrConfig, setQrConfig] = useState(null);
@@ -58,7 +57,6 @@ export default function GlobalConfig() {
                 );
             }
             if (data.cronConfig) setCronConfig(data.cronConfig);
-            if (data.fortuneSync) setFortuneSync(data.fortuneSync);
             if (data.logRetentionDays !== undefined) setLogRetentionDays(data.logRetentionDays);
         } catch {
             setMessage('网络错误，无法加载配置');
@@ -608,8 +606,8 @@ export default function GlobalConfig() {
                     </div>
                 </Card>
 
-                {/* System Info Card (cron / fortune sync) */}
-                {(cronConfig || fortuneSync) && (
+                {/* System Info Card (cron) */}
+                {cronConfig && (
                     <Card>
                         <div className="flex items-center gap-2 mb-4">
                             <div className="w-8 h-8 rounded-lg bg-[#1e3a5f]/10 flex items-center justify-center">
@@ -623,14 +621,6 @@ export default function GlobalConfig() {
                                     <span className="text-xs text-slate-400 shrink-0 w-20 pt-0.5">Cron 配置</span>
                                     <span className="bg-slate-900 text-emerald-400 font-mono px-3 py-2 rounded-lg text-xs">
                                         {typeof cronConfig === 'string' ? cronConfig : JSON.stringify(cronConfig)}
-                                    </span>
-                                </div>
-                            )}
-                            {fortuneSync && (
-                                <div className="flex items-start gap-2">
-                                    <span className="text-xs text-slate-400 shrink-0 w-20 pt-0.5">运势同步</span>
-                                    <span className="bg-slate-900 text-emerald-400 font-mono px-3 py-2 rounded-lg text-xs">
-                                        {typeof fortuneSync === 'string' ? fortuneSync : JSON.stringify(fortuneSync)}
                                     </span>
                                 </div>
                             )}

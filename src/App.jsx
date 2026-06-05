@@ -59,7 +59,6 @@ const RemoteControl = lazyRetry(() => import('./admin/pages/RemoteControl'));
 const GlobalConfig = lazyRetry(() => import('./admin/pages/GlobalConfig'));
 const Kanban = lazyRetry(() => import('./admin/pages/Kanban'));
 const CrawlerMonitor = lazyRetry(() => import('./admin/CrawlerMonitor'));
-const FortuneManager = lazyRetry(() => import('./admin/FortuneManager'));
 const LayoutManager = lazyRetry(() => import('./admin/LayoutManager'));
 const PhotoFramesManager = lazyRetry(() => import('./admin/PhotoFramesManager'));
 const WinnerConfig = lazyRetry(() => import('./admin/WinnerConfig'));
@@ -118,7 +117,6 @@ export default function App() {
           <Route path="layout" element={<LayoutManager />} />
           <Route path="photo-frames" element={<PhotoFramesManager />} />
           <Route path="game-logos" element={<GameLogosManager />} />
-          <Route path="fortune" element={<FortuneManager />} />
           <Route path="rbac" element={<RBACManager />} />
           <Route path="game-config" element={<GameConfig />} />
           <Route path="game-hub-config" element={<GameHubConfig />} />

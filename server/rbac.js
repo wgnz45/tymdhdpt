@@ -397,7 +397,6 @@ router.get('/permission-modules', authMiddleware, (req, res) => {
             { key: 'layout', name: '布局管理', actions: ['view', 'edit', 'delete'] },
             { key: 'scratch', name: '刮刮乐', actions: ['view', 'edit', 'delete'] },
             { key: 'draw_data', name: '开奖数据', actions: ['view', 'edit'] },
-            { key: 'fortune', name: '运势管理', actions: ['view', 'edit'] },
             { key: 'system_config', name: '系统设置', actions: ['view', 'edit'] },
             { key: 'user_manage', name: '用户管理', actions: ['view', 'edit', 'delete'] },
             { key: 'logs', name: '日志管理', actions: ['view', 'delete'] },

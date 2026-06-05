@@ -10,121 +10,9 @@ const QRCode = require('qrcode');
 const compression = require('compression');
 const { fetchAllDrawHistories } = require('./drawHistory.js');
 
-// --- WeChat Work Config & Helpers ---
-const upload = multer({ storage: multer.memoryStorage() }); // In-memory storage for handling image uploads
+const upload = multer({ storage: multer.memoryStorage() });
 const { stitchParts, SCRATCH_IMG_DIR, crawlScratchCards, runAllCrawlers } = require('./crawler.js');
 const puppeteer = require('puppeteer');
-const { fetchAllFortune } = require('./crawlerFortune.js');
-
-let wechatToken = {
-    access_token: null,
-    expires_at: 0
-};
-
-// Helper: Get Cached Access Token
-const getWeChatToken = async (config) => {
-    const now = Math.floor(Date.now() / 1000);
-    if (wechatToken.access_token && now < wechatToken.expires_at) {
-        return wechatToken.access_token;
-    }
-
-    try {
-        const url = `https://qyapi.weixin.qq.com/cgi-bin/gettoken?corpid=${config.corpId}&corpsecret=${config.secret}`;
-        const res = await axios.get(url);
-        if (res.data.errcode === 0) {
-            wechatToken.access_token = res.data.access_token;
-            // Buffer time: expire 60s earlier than official 7200s
-            wechatToken.expires_at = now + res.data.expires_in - 60;
-            return wechatToken.access_token;
-        } else {
-            console.error('[WeChat] Token Error:', res.data);
-            return null;
-        }
-    } catch (e) {
-        console.error('[WeChat] Token Network Error:', e.message);
-        return null;
-    }
-};
-
-// Helper: Upload Image to WeChat Media
-const uploadWeChatMedia = async (token, fileBuffer, fileName) => {
-    try {
-        const form = new FormData();
-        form.append('media', fileBuffer, { filename: fileName, contentType: 'image/png' });
-
-        const url = `https://qyapi.weixin.qq.com/cgi-bin/media/upload?access_token=${token}&type=image`;
-        const res = await axios.post(url, form, { headers: form.getHeaders() });
-
-        if (res.data.errcode === 0) {
-            return res.data.media_id;
-        } else {
-            console.error('[WeChat] Upload Error:', res.data);
-            return null;
-        }
-    } catch (e) {
-        console.error('[WeChat] Upload Network Error:', e.message);
-        return null;
-    }
-};
-
-// Helper: Send Application Message (Mode: 'app')
-const sendWeChatMessage = async (token, config, mediaId) => {
-    try {
-        const url = `https://qyapi.weixin.qq.com/cgi-bin/message/send?access_token=${token}`;
-        const payload = {
-            touser: config.targetUser || '@all',
-            msgtype: "image",
-            agentid: config.agentId,
-            image: {
-                media_id: mediaId
-            },
-            safe: 0
-        };
-        const res = await axios.post(url, payload);
-        if (res.data.errcode === 0) {
-            console.log('[WeChat] App Message Sent Successfully!');
-            return true;
-        } else {
-            console.error('[WeChat] Send App Message Error:', res.data);
-            return false;
-        }
-    } catch (e) {
-        console.error('[WeChat] Send App Message Network Error:', e.message);
-        return false;
-    }
-};
-
-// Helper: Send Webhook Message (Mode: 'webhook')
-const sendWeChatWebhook = async (webhookUrl, fileBuffer) => {
-    try {
-        // 1. Calculate MD5
-        const md5 = crypto.createHash('md5').update(fileBuffer).digest('hex');
-
-        // 2. Calculate Base64
-        const base64 = fileBuffer.toString('base64');
-
-        // 3. Send Request
-        const payload = {
-            msgtype: "image",
-            image: {
-                base64: base64,
-                md5: md5
-            }
-        };
-
-        const res = await axios.post(webhookUrl, payload);
-        if (res.data.errcode === 0) {
-            console.log('[WeChat] Webhook Message Sent Successfully!');
-            return true;
-        } else {
-            console.error('[WeChat] Webhook Error:', res.data);
-            return false;
-        }
-    } catch (e) {
-        console.error('[WeChat] Webhook Network Error:', e.message);
-        return false;
-    }
-};
 
 process.on('uncaughtException', (err) => {
     console.error('Uncaught Exception:', err);
@@ -1552,7 +1440,7 @@ app.post('/api/super/refresh-data', (req, res) => {
 
 // 8. Update Super Config (Super Only)
 app.post('/api/super/update-config', (req, res) => {
-    const { superKey, cronConfig, showCalculator, animationDuration, packageDuration, wechatConfig, drawHistorySize, scrollHoldMs, drawLogoMap, drawLogoOpacity, managerTitleTemplates, logRetentionDays } = req.body;
+    const { superKey, cronConfig, showCalculator, animationDuration, packageDuration, drawHistorySize, scrollHoldMs, drawLogoMap, drawLogoOpacity, managerTitleTemplates, logRetentionDays } = req.body;
     let db = getDB();
 
     if (superKey !== db.superConfig.superKey) {
@@ -1594,9 +1482,6 @@ app.post('/api/super/update-config', (req, res) => {
         }
     }
 
-    if (wechatConfig) {
-        db.superConfig.wechatConfig = wechatConfig;
-    }
     if (drawLogoMap !== undefined) {
         if (drawLogoMap && typeof drawLogoMap === 'object' && !Array.isArray(drawLogoMap)) {
             db.superConfig.drawLogoMap = drawLogoMap;
@@ -2771,38 +2656,6 @@ app.post('/api/super/carousel/update', (req, res) => {
 
 // ====== END SCRATCH CARD API ======
 
-// 14. WeChat Integration: Send Image (Public/Protected via StoreID?)
-// Frontend logic: After share (html2canvas), send Blob here.
-app.post('/api/wechat/send-image', upload.single('file'), async (req, res) => {
-    const { storeId } = req.body;
-    console.log('[WeChat] Share Request Received From Store:', storeId);
-
-    const db = getDB();
-
-    // Find the store
-    const store = db.stores.find(s => s.id === (storeId || 'default'));
-    if (!store) {
-        return res.status(404).json({ success: false, message: 'Store not found' });
-    }
-
-    // Check if store has webhook configured
-    if (!store.webhookUrl) {
-        return res.json({ success: false, message: 'Webhook URL not configured for this store' });
-    }
-
-    if (!req.file) {
-        return res.status(400).json({ success: false, message: 'No file uploaded' });
-    }
-
-    // Send via webhook
-    const sent = await sendWeChatWebhook(store.webhookUrl, req.file.buffer);
-    if (sent) {
-        return res.json({ success: true, message: 'WeChat Webhook sent' });
-    } else {
-        return res.status(500).json({ success: false, message: 'Failed to send WeChat Webhook' });
-    }
-});
-
 // QR Code Generation API
 app.post('/api/generate-qr', async (req, res) => {
     try {
@@ -3255,20 +3108,6 @@ cron.schedule('* * * * *', () => {
     autoRefreshSources(false);
 });
 
-// Fortune Sync Task: Daily at 00:05
-cron.schedule('5 0 * * *', async () => {
-    console.log('[Cron] Starting scheduled fortune sync...');
-    try {
-        const fortuneData = await fetchAllFortune();
-        const db = getDB();
-        db.fortuneData = fortuneData;
-        saveDB(db);
-        console.log('[Cron] Fortune sync complete');
-    } catch (e) {
-        console.error('[Cron] Fortune sync failed:', e.message);
-    }
-});
-
 // (Moved catchall to end)
 // ----------------------------------------------------
 // SOURCES & CRAWLER (Data Feed Simulation)
@@ -3289,11 +3128,9 @@ app.get('/api/system/sources', async (req, res) => {
     if (!db.drawHistory || !db.drawHistory.games || db.drawHistory.games.length === 0) {
         refreshDrawHistoryInBackground();
     }
-    // Deep merge fortuneData into sources for frontend
     const responseData = {
         ...db.sources,
         availableTags: normalizeAnnouncementTags(db.superConfig?.availableTags),
-        fortuneData: db.fortuneData || { zodiacs: [], constellations: [] },
         drawHistorySize: Number(db.superConfig?.drawHistorySize) || 6,
         scrollHoldMs: Number(db.superConfig?.scrollHoldMs) || 3000,
         layoutLibrary: db.layoutLibrary || [],
@@ -3407,40 +3244,6 @@ app.post('/api/system/sources/refresh', async (req, res) => {
     }
 });
 
-// --- Fortune API ---
-
-// GET /api/super/fortune
-app.get('/api/super/fortune', async (req, res) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-    const db = getDB();
-    if (!db.fortuneData) {
-        db.fortuneData = { zodiacs: [], constellations: [], lastUpdated: null };
-    }
-    res.json({ success: true, data: db.fortuneData });
-});
-
-// POST /api/super/fortune/refresh
-app.post('/api/super/fortune/refresh', async (req, res) => {
-    const { superKey } = req.body;
-    console.log('[API] Fortune Refresh Request received. Key:', superKey ? '***' : 'MISSING');
-    const db = getDB();
-    if (superKey !== db.superConfig.superKey) {
-        console.warn('[API] Fortune Refresh: Unauthorized key');
-        return res.status(403).json({ error: 'Unauthorized' });
-    }
-
-    try {
-        console.log('[API] Starting Fortune Sync Process...');
-        const fortuneData = await fetchAllFortune();
-        db.fortuneData = fortuneData;
-        saveDB(db);
-        console.log('[API] Fortune Sync Process COMPLETED successfully');
-        res.json({ success: true, data: fortuneData });
-    } catch (e) {
-        console.error('[API] Fortune Refresh Error:', e.message);
-        res.status(500).json({ error: e.message });
-    }
-});
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
 app.get(/^(?!\/api).+/, (req, res) => {

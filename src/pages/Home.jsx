@@ -1543,7 +1543,7 @@ export default function Home({ onBack, onReady }) {
                                     )}
 
                                     {/* Red Balls: Grid 7 cols */}
-                                    <div ref={redGridRef} className={`grid grid-cols-7 justify-items-center mx-auto ${isMobile ? (isCompact ? 'gap-y-0.5 gap-x-0.5' : 'gap-y-1 gap-x-1') : (androidPadMode ? 'gap-y-1 gap-x-1 w-full' : 'gap-y-2 gap-x-2 max-w-3xl')}`}>
+                                    <div ref={redGridRef} className={`grid grid-cols-7 justify-items-center mx-auto ${isMobile ? (isCompact ? 'gap-y-1 gap-x-0.5' : 'gap-y-2 gap-x-1') : (androidPadMode ? 'gap-y-1 gap-x-1 w-full' : 'gap-y-2 gap-x-2 max-w-3xl')}`}>
                                         {Array.from({ length: RED_COUNT }, (_, i) => i + 1).map(n => {
                                             const isLocked = lockedNumbers.reds.has(n);
                                             const isFlashing = activeReds.includes(n) && !isLocked;
@@ -1560,7 +1560,7 @@ export default function Home({ onBack, onReady }) {
                                     <div className={`w-full mx-auto border-t-2 border-dashed border-gray-200 relative ${androidPadMode ? 'pt-1 mt-1' : 'max-w-2xl pt-2 mt-2'}`}></div>
 
                                     {/* Blue Balls: Grid 6 cols */}
-                                    <div ref={blueGridRef} className={`grid grid-cols-6 justify-items-center mx-auto ${isMobile ? (isCompact ? 'gap-y-0.5 gap-x-1' : 'gap-y-1 gap-x-2') : (androidPadMode ? 'gap-y-1 gap-x-2 w-full' : 'gap-y-2 gap-x-4 max-w-xl')}`}>
+                                    <div ref={blueGridRef} className={`grid grid-cols-6 justify-items-center mx-auto ${isMobile ? (isCompact ? 'gap-y-1 gap-x-1' : 'gap-y-2 gap-x-2') : (androidPadMode ? 'gap-y-1 gap-x-2 w-full' : 'gap-y-2 gap-x-4 max-w-xl')}`}>
                                         {Array.from({ length: BLUE_COUNT }, (_, i) => i + 1).map(n => {
                                             const isLocked = lockedNumbers.blues.has(n);
                                             const isFlashing = activeBlues.includes(n) && !isLocked;
